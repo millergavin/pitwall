@@ -1,4 +1,5 @@
-const API_BASE_URL = '/api'; // Proxy handled by Vite
+// In production, use the full API URL; in dev, use Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const api = {
   drivers: async (season?: number) => {
