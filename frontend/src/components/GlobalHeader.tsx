@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { IconButton } from './IconButton';
 import { DatabaseUpdateIndicator } from './DatabaseUpdateIndicator';
-import { faBars, faDatabase } from '@fortawesome/free-solid-svg-icons';
+import { Changelog } from './Changelog';
+import { faBars, faDatabase, faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
 
 interface GlobalHeaderProps {
   pageTitle?: string;
@@ -10,6 +12,7 @@ interface GlobalHeaderProps {
 
 export const GlobalHeader = ({ pageTitle = 'Page Title' }: GlobalHeaderProps) => {
   const { sidebarOpen, setSidebarOpen, sidebarWidth } = useStore();
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   return (
     <header className="bg-1 pt-2 pb-1 flex items-center w-full flex-shrink-0">
@@ -53,6 +56,14 @@ export const GlobalHeader = ({ pageTitle = 'Page Title' }: GlobalHeaderProps) =>
       {/* Right: Action buttons */}
       <div className="flex items-center gap-2 px-6">
         <DatabaseUpdateIndicator />
+        <IconButton
+          size="md"
+          variant="text"
+          icon={faClockRotateLeft}
+          onClick={() => setChangelogOpen(true)}
+          aria-label="Changelog"
+          title="Changelog"
+        />
         <Link to="/admin" title="Database Admin">
           <IconButton
             size="md"
@@ -62,6 +73,9 @@ export const GlobalHeader = ({ pageTitle = 'Page Title' }: GlobalHeaderProps) =>
           />
         </Link>
       </div>
+
+      {/* Changelog Panel */}
+      <Changelog isOpen={changelogOpen} onClose={() => setChangelogOpen(false)} />
     </header>
   );
 };

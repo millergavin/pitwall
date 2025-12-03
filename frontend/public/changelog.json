@@ -1,0 +1,89 @@
+{
+  "generated": "2025-12-03T04:21:46.884Z",
+  "commits": [
+    {
+      "hash": "ecccf49",
+      "date": "2025-12-02",
+      "message": "Add mobile-responsive layouts across all major pages",
+      "author": "millergavin"
+    },
+    {
+      "hash": "a17efc7",
+      "date": "2025-12-02",
+      "message": "Add driver details page with season stats and progression",
+      "author": "millergavin"
+    },
+    {
+      "hash": "3b442a2",
+      "date": "2025-12-02",
+      "message": "Add framer-motion animations, password protect admin, enhance circuit details",
+      "author": "millergavin"
+    },
+    {
+      "hash": "d0a058f",
+      "date": "2025-12-02",
+      "message": "UI polishes and dashboard updates",
+      "author": "millergavin"
+    },
+    {
+      "hash": "0688034",
+      "date": "2025-12-02",
+      "message": "Add dynamic page titles, favicon, and social preview OG image",
+      "author": "millergavin"
+    },
+    {
+      "hash": "eb389fe",
+      "date": "2025-12-02",
+      "message": "Add pitwall.one to CORS allowed origins",
+      "author": "millergavin"
+    },
+    {
+      "hash": "8b590ad",
+      "date": "2025-12-02",
+      "message": "Fix driver_name to full_name in API query",
+      "author": "millergavin"
+    },
+    {
+      "hash": "e84ada7",
+      "date": "2025-12-02",
+      "message": "Use environment variable for API URL",
+      "author": "millergavin"
+    },
+    {
+      "hash": "663bba6",
+      "date": "2025-12-02",
+      "message": "Add Railway deployment config",
+      "author": "millergavin"
+    },
+    {
+      "hash": "f16ceca",
+      "date": "2025-12-02",
+      "message": "Fix TypeScript errors for Vercel build",
+      "author": "millergavin"
+    },
+    {
+      "hash": "d491f8c",
+      "date": "2025-12-02",
+      "message": "Fix Font Awesome registry to use public npm",
+      "author": "millergavin"
+    },
+    {
+      "hash": "52382f1",
+      "date": "2025-12-02",
+      "message": "Add .npmrc to fix peer dependency conflicts on Vercel",
+      "author": "millergavin"
+    },
+    {
+      "hash": "cd645cc",
+      "date": "2025-12-02",
+      "message": "Add Vercel config for SPA routing",
+      "author": "millergavin"
+    },
+    {
+      "hash": "f201d5b",
+      "date": "2025-12-02",
+      "message": "Initial commit: Pitwall F1 dashboard",
+      "author": "millergavin"
+    }
+  ]
+}
