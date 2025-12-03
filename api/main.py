@@ -100,11 +100,11 @@ def get_drivers(season: int = None):
         with conn.cursor(row_factory=dict_row) as cur:
             if season:
                 cur.execute(
-                    "SELECT * FROM gold.dim_drivers WHERE season = %s ORDER BY driver_name",
+                    "SELECT * FROM gold.dim_drivers WHERE season = %s ORDER BY full_name",
                     (season,)
                 )
             else:
-                cur.execute("SELECT * FROM gold.dim_drivers ORDER BY season DESC, driver_name")
+                cur.execute("SELECT * FROM gold.dim_drivers ORDER BY season DESC, full_name")
             return cur.fetchall()
 
 
