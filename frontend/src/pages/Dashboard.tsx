@@ -473,43 +473,10 @@ export const Dashboard = () => {
                 VIEW ALL
               </button>
             </div>
-            <div className="space-y-3 overflow-auto flex-1">
-              {top10Drivers.map((driver, idx) => (
-                <div
-                  key={driver.driver_id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/drivers/${driver.driver_id}`);
-                  }}
-                  className="flex items-center justify-between p-3 rounded cursor-pointer hover:bg-zinc-900 transition-colors"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="text-zinc-400 f1-display-bold text-sm w-6">
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-white f1-display-bold text-base">
-                        {driver.driver_name}
-                      </div>
-                      <div className="text-zinc-500 text-xs f1-display-regular">
-                        {driver.cumulative_points} pts
-                        {driver.deltaFromLeader > 0 && (
-                          <span className="ml-2">(-{driver.deltaFromLeader})</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <MiniSparkline 
-                    data={driver.history} 
-                    color={`#${driver.color_hex}`}
-                  />
-                </div>
-              ))}
-            </div>
             
             {/* Top 3 Drivers with Images */}
             {top10Drivers.length >= 3 && (
-              <div className="mt-4 pt-4 border-t border-zinc-900">
+              <div className="mb-4">
                 <div className="grid grid-cols-3 gap-2">
                   {top10Drivers.slice(0, 3).map((driver, idx) => {
                     const driverData = driversRoster.find((d: any) => d.driver_id === driver.driver_id);
@@ -547,6 +514,40 @@ export const Dashboard = () => {
                 </div>
               </div>
             )}
+            
+            <div className="space-y-3 overflow-auto flex-1">
+              {top10Drivers.map((driver, idx) => (
+                <div
+                  key={driver.driver_id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/drivers/${driver.driver_id}`);
+                  }}
+                  className="flex items-center justify-between p-3 rounded cursor-pointer hover:bg-zinc-900 transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="text-zinc-400 f1-display-bold text-sm w-6">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-white f1-display-bold text-base">
+                        {driver.driver_name}
+                      </div>
+                      <div className="text-zinc-500 text-xs f1-display-regular">
+                        {driver.cumulative_points} pts
+                        {driver.deltaFromLeader > 0 && (
+                          <span className="ml-2">(-{driver.deltaFromLeader})</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <MiniSparkline 
+                    data={driver.history} 
+                    color={`#${driver.color_hex}`}
+                  />
+                </div>
+              ))}
+            </div>
           </motion.div>
 
           {/* Constructor Championship - Column 3 */}
@@ -570,44 +571,10 @@ export const Dashboard = () => {
                 VIEW ALL
               </button>
             </div>
-            <div className="space-y-3 overflow-auto flex-1">
-              {top10Constructors.map((team, idx) => (
-                <div
-                  key={team.team_id}
-                  className="flex items-center justify-between p-3 rounded"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="text-zinc-400 f1-display-bold text-sm w-6">
-                      {idx + 1}
-                    </div>
-                    <div className="flex items-center gap-2 flex-1">
-                      {team.logo_url && (
-                        <img src={team.logo_url} alt={team.team_name} className="w-5 h-5 object-contain" />
-                      )}
-                      <div className="flex-1">
-                        <div className="text-white f1-display-bold text-base">
-                          {team.display_name || team.team_name}
-                        </div>
-                        <div className="text-zinc-500 text-xs f1-display-regular">
-                          {team.cumulative_points} pts
-                          {team.deltaFromLeader > 0 && (
-                            <span className="ml-2">(-{team.deltaFromLeader})</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <MiniSparkline 
-                    data={team.history} 
-                    color={`#${team.color_hex}`}
-                  />
-                </div>
-              ))}
-            </div>
             
             {/* Top 3 Teams with Car Images */}
             {top10Constructors.length >= 3 && (
-              <div className="mt-4 pt-4 border-t border-zinc-900">
+              <div className="mb-4">
                 <div className="grid grid-cols-3 gap-2">
                   {top10Constructors.slice(0, 3).map((team, idx) => {
                     const teamData = teamsRoster.find((t: any) => t.team_id === team.team_id);
@@ -645,6 +612,41 @@ export const Dashboard = () => {
                 </div>
               </div>
             )}
+            
+            <div className="space-y-3 overflow-auto flex-1">
+              {top10Constructors.map((team, idx) => (
+                <div
+                  key={team.team_id}
+                  className="flex items-center justify-between p-3 rounded"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="text-zinc-400 f1-display-bold text-sm w-6">
+                      {idx + 1}
+                    </div>
+                    <div className="flex items-center gap-2 flex-1">
+                      {team.logo_url && (
+                        <img src={team.logo_url} alt={team.team_name} className="w-5 h-5 object-contain" />
+                      )}
+                      <div className="flex-1">
+                        <div className="text-white f1-display-bold text-base">
+                          {team.display_name || team.team_name}
+                        </div>
+                        <div className="text-zinc-500 text-xs f1-display-regular">
+                          {team.cumulative_points} pts
+                          {team.deltaFromLeader > 0 && (
+                            <span className="ml-2">(-{team.deltaFromLeader})</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <MiniSparkline 
+                    data={team.history} 
+                    color={`#${team.color_hex}`}
+                  />
+                </div>
+              ))}
+            </div>
           </motion.div>
         </motion.div>
       </div>
