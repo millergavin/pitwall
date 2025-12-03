@@ -19,7 +19,7 @@ export const GlobalHeader = ({ pageTitle = 'Page Title' }: GlobalHeaderProps) =>
         className="flex items-center"
         style={{ width: `${sidebarWidth}px` }}
       >
-        <div className="flex items-center gap-2 px-8 py-4">
+        <div className="flex items-center gap-2 px-8 py-1">
           <IconButton
             size="md"
             variant="text"

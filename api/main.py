@@ -64,13 +64,15 @@ app = FastAPI(
 ALLOWED_ORIGINS = [
     "http://localhost:5174",
     "http://localhost:3000",
-    os.getenv("FRONTEND_URL", ""),  # Set this in Railway to your Vercel URL
+    "https://pitwall.one",
+    "https://www.pitwall.one",
+    os.getenv("FRONTEND_URL", ""),  # Optional additional URL
 ]
-# Also allow any vercel.app subdomain
+# Also allow any vercel.app subdomain for preview deployments
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",  # Allow all Vercel preview deployments
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

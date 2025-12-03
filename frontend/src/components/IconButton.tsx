@@ -41,8 +41,8 @@ export const IconButton = ({
   const variantClasses = {
     primary: 'bg-f1-red text-white hover:bg-[#981b1b]',
     secondary: 'bg-zinc-950 border border-zinc-900 text-white hover:bg-zinc-900',
-    text: 'bg-transparent text-white hover:bg-overlay-100',
-    outline: 'bg-transparent border border-zinc-600 text-white hover:bg-overlay-100 hover:border-white',
+    text: 'bg-transparent text-white hover:bg-[rgb(255_255_255/0.10)]',
+    outline: 'bg-transparent border border-zinc-600 text-white hover:bg-[rgb(255_255_255/0.10)] hover:border-white',
     destructive: 'bg-transparent border border-f1-bright-red text-f1-bright-red hover:bg-f1-red hover:text-black',
   };
 
