@@ -805,6 +805,142 @@ def get_driver_detail(driver_id: str, season: int = 2025):
             }
 
 
+@app.get("/api/teams/{team_id:path}")
+def get_team_detail(team_id: str, season: int = 2025):
+    """
+    Get detailed information for a specific team including:
+    - Team info and branding
+    - Season stats (points, wins, podiums)
+    - Current drivers
+    - Recent race results
+    - Season progression
+    """
+    if not db_pool:
+        raise HTTPException(status_code=500, detail="Database pool not initialized")
+    
+    with db_pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            # Get team basic info
+            cur.execute("""
+                SELECT 
+                    t.team_id,
+                    dt.team_name,
+                    dt.display_name,
+                    dt.color_hex,
+                    dt.logo_url,
+                    tb.car_image_url
+                FROM silver.teams t
+                LEFT JOIN gold.dim_teams dt ON t.team_id = dt.team_id AND dt.season = %s
+                LEFT JOIN silver.team_branding tb ON t.team_id = tb.team_id AND tb.season = %s
+                WHERE t.team_id = %s
+                LIMIT 1
+            """, (season, season, team_id))
+            
+            team_info = cur.fetchone()
+            if not team_info:
+                raise HTTPException(status_code=404, detail="Team not found")
+            
+            # Get season stats
+            cur.execute("""
+                SELECT 
+                    MAX(cumulative_points) as total_points,
+                    COUNT(DISTINCT CASE WHEN finish_position = 1 THEN round_number END) as wins,
+                    COUNT(DISTINCT CASE WHEN finish_position <= 3 THEN round_number END) as podiums,
+                    COUNT(DISTINCT CASE WHEN finish_position <= 10 THEN round_number END) as points_finishes,
+                    COUNT(DISTINCT round_number) as races_entered,
+                    COUNT(CASE WHEN fastest_lap THEN 1 END) as fastest_laps
+                FROM gold.constructor_standings_progression
+                WHERE team_id = %s AND season = %s
+            """, (team_id, season))
+            
+            season_stats = cur.fetchone()
+            
+            # Get championship position
+            cur.execute("""
+                WITH latest_standings AS (
+                    SELECT 
+                        team_id,
+                        MAX(cumulative_points) as total_points
+                    FROM gold.constructor_standings_progression
+                    WHERE season = %s
+                    GROUP BY team_id
+                )
+                SELECT 
+                    COUNT(*) + 1 as championship_position
+                FROM latest_standings
+                WHERE total_points > (
+                    SELECT total_points 
+                    FROM latest_standings 
+                    WHERE team_id = %s
+                )
+            """, (season, team_id))
+            
+            position_result = cur.fetchone()
+            championship_position = position_result['championship_position'] if position_result else None
+            
+            # Get current drivers for the team
+            cur.execute("""
+                SELECT DISTINCT ON (d.driver_id)
+                    d.driver_id,
+                    dd.driver_number,
+                    d.full_name,
+                    d.name_acronym,
+                    d.headshot_url,
+                    d.headshot_override,
+                    MAX(dsp.cumulative_points) as driver_points
+                FROM silver.drivers d
+                INNER JOIN gold.dim_drivers dd ON d.driver_id = dd.driver_id AND dd.season = %s
+                INNER JOIN gold.driver_standings_progression dsp ON d.driver_id = dsp.driver_id AND dsp.season = %s
+                WHERE dd.primary_team_id = %s
+                GROUP BY d.driver_id, dd.driver_number, d.full_name, d.name_acronym, d.headshot_url, d.headshot_override
+                ORDER BY d.driver_id, driver_points DESC
+            """, (season, season, team_id))
+            
+            drivers = cur.fetchall()
+            
+            # Get recent results (last 5 rounds with both drivers)
+            cur.execute("""
+                SELECT DISTINCT ON (csp.round_number, csp.session_type)
+                    csp.round_number,
+                    csp.meeting_short_name,
+                    csp.session_type::text,
+                    csp.session_points,
+                    csp.country_code,
+                    csp.emoji_flag
+                FROM gold.constructor_standings_progression csp
+                WHERE csp.team_id = %s AND csp.season = %s
+                ORDER BY csp.round_number DESC, csp.session_type
+                LIMIT 5
+            """, (team_id, season))
+            
+            recent_results = cur.fetchall()
+            
+            # Get season progression (all rounds)
+            cur.execute("""
+                SELECT DISTINCT ON (round_number)
+                    round_number,
+                    meeting_short_name,
+                    MAX(cumulative_points) as cumulative_points,
+                    MAX(session_points) as session_points,
+                    emoji_flag
+                FROM gold.constructor_standings_progression
+                WHERE team_id = %s AND season = %s
+                GROUP BY round_number, meeting_short_name, emoji_flag
+                ORDER BY round_number
+            """, (team_id, season))
+            
+            progression = cur.fetchall()
+            
+            return {
+                "team": team_info,
+                "season_stats": season_stats,
+                "championship_position": championship_position,
+                "drivers": drivers,
+                "recent_results": recent_results,
+                "season_progression": progression,
+            }
+
+
 # =============================================================================
 # DATABASE UPDATE ENDPOINTS
 # =============================================================================

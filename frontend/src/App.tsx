@@ -9,6 +9,7 @@ import { SessionDetails } from './pages/SessionDetails';
 import { Drivers } from './pages/Drivers';
 import { DriverDetails } from './pages/DriverDetails';
 import { Teams } from './pages/Teams';
+import { TeamDetails } from './pages/TeamDetails';
 import { Admin } from './pages/Admin';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
       <Route path="/drivers" element={<Drivers />} />
       <Route path="/drivers/:driverId" element={<DriverDetails />} />
       <Route path="/teams" element={<Teams />} />
+      <Route path="/teams/:teamId" element={<TeamDetails />} />
       <Route path="/admin" element={<Admin />} />
     </Routes>
   );

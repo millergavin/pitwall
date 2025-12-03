@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/PageLayout';
 import { NavSidebar } from '../components/NavSidebar';
 import { TeamCard, type TeamCardData } from '../components/TeamCard';
 import { api } from '../api/client';
 
 export const Teams = () => {
+  const navigate = useNavigate();
   const [season, setSeason] = useState(2025);
   const [teams, setTeams] = useState<TeamCardData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,10 +72,7 @@ export const Teams = () => {
               <TeamCard
                 key={team.team_id}
                 team={team}
-                onClick={() => {
-                  // TODO: Navigate to team detail page
-                  console.log('Clicked team:', team.team_name);
-                }}
+                onClick={() => navigate(`/teams/${team.team_id}`)}
               />
             ))}
           </div>

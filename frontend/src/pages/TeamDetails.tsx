@@ -7,23 +7,13 @@ import { FontAwesomeIcon } from '../lib/fontawesome';
 import { faArrowLeft, faTrophy, faMedal, faFlagCheckered, faStopwatch } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../api/client';
 
-interface DriverInfo {
-  driver_id: string;
-  driver_number: number;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  name_acronym: string;
-  country_code: string;
-  headshot_url: string | null;
-  headshot_override: string | null;
-  wikipedia_id: string | null;
-  birthdate: string | null;
-  primary_team_id: string;
-  primary_team_name: string;
+interface TeamInfo {
+  team_id: string;
+  team_name: string;
+  display_name: string | null;
   color_hex: string;
-  team_logo_url: string | null;
-  team_display_name: string | null;
+  logo_url: string | null;
+  car_image_url: string | null;
 }
 
 interface SeasonStats {
@@ -35,15 +25,21 @@ interface SeasonStats {
   fastest_laps: number;
 }
 
+interface Driver {
+  driver_id: string;
+  driver_number: number;
+  full_name: string;
+  name_acronym: string;
+  headshot_url: string | null;
+  headshot_override: string | null;
+  driver_points: number;
+}
+
 interface RecentResult {
   round_number: number;
   meeting_short_name: string;
   session_type: string;
-  finish_position: number | null;
-  grid_position: number | null;
   session_points: number;
-  fastest_lap: boolean;
-  status: string;
   country_code: string;
   emoji_flag: string;
 }
@@ -53,45 +49,45 @@ interface SeasonProgression {
   meeting_short_name: string;
   cumulative_points: number;
   session_points: number;
-  finish_position: number | null;
   emoji_flag: string;
 }
 
-interface DriverDetailData {
-  driver: DriverInfo;
+interface TeamDetailData {
+  team: TeamInfo;
   season_stats: SeasonStats;
   championship_position: number;
+  drivers: Driver[];
   recent_results: RecentResult[];
   season_progression: SeasonProgression[];
 }
 
-export const DriverDetails = () => {
-  const { driverId } = useParams<{ driverId: string }>();
+export const TeamDetails = () => {
+  const { teamId } = useParams<{ teamId: string }>();
   const navigate = useNavigate();
   const [season, setSeason] = useState(2025);
-  const [data, setData] = useState<DriverDetailData | null>(null);
+  const [data, setData] = useState<TeamDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!driverId) return;
+      if (!teamId) return;
       
       setLoading(true);
       setError(null);
       
       try {
-        const driverData = await api.driverDetail(driverId, season);
-        setData(driverData);
+        const teamData = await api.teamDetail(teamId, season);
+        setData(teamData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load driver details');
+        setError(err instanceof Error ? err.message : 'Failed to load team details');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [driverId, season]);
+  }, [teamId, season]);
 
   const formatPosition = (position: number | null) => {
     if (!position) return '-';
@@ -123,7 +119,7 @@ export const DriverDetails = () => {
 
   if (loading) {
     return (
-      <PageLayout pageTitle="Driver" sidebar={<NavSidebar />}>
+      <PageLayout pageTitle="Team" sidebar={<NavSidebar />}>
         <div className="flex items-center justify-center h-full">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-f1-red"></div>
         </div>
@@ -133,20 +129,19 @@ export const DriverDetails = () => {
 
   if (error || !data) {
     return (
-      <PageLayout pageTitle="Driver" sidebar={<NavSidebar />}>
+      <PageLayout pageTitle="Team" sidebar={<NavSidebar />}>
         <div className="flex items-center justify-center h-full">
-          <p className="text-f1-red text-lg">{error || 'Driver not found'}</p>
+          <p className="text-f1-red text-lg">{error || 'Team not found'}</p>
         </div>
       </PageLayout>
     );
   }
 
-  const { driver, season_stats, championship_position, recent_results, season_progression } = data;
-  const headshotUrl = driver.headshot_override || driver.headshot_url;
+  const { team, season_stats, championship_position, drivers, recent_results, season_progression } = data;
 
   return (
     <PageLayout 
-      pageTitle={driver.full_name}
+      pageTitle={team.display_name || team.team_name}
       sidebar={<NavSidebar />}
     >
       <div className="flex flex-col h-full overflow-hidden">
@@ -156,9 +151,9 @@ export const DriverDetails = () => {
             variant="text" 
             size="sm"
             icon={faArrowLeft}
-            onClick={() => navigate('/drivers')}
+            onClick={() => navigate('/teams')}
           >
-            Back to Drivers
+            Back to Teams
           </Button>
 
           <select
@@ -175,13 +170,13 @@ export const DriverDetails = () => {
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto space-y-6">
+        <div className="flex-1 overflow-y-auto space-y-4 lg:space-y-6">
         {/* Hero Section */}
         <div 
           className="relative rounded-corner overflow-hidden"
           style={{ 
             height: '224px',
-            background: `linear-gradient(135deg, #${driver.color_hex}20 0%, #${driver.color_hex}40 100%)`,
+            background: `linear-gradient(135deg, #${team.color_hex}20 0%, #${team.color_hex}40 100%)`,
           }}
         >
           {/* Dark overlay */}
@@ -192,54 +187,27 @@ export const DriverDetails = () => {
           {/* Content */}
           <div className="absolute inset-0 flex items-end p-4 lg:p-8">
             <div className="flex items-end gap-3 lg:gap-6 w-full">
-              {/* Driver headshot - hide on mobile */}
-              {headshotUrl && (
-                <div 
-                  className="hidden lg:block w-48 h-48 rounded-corner overflow-hidden flex-shrink-0"
-                  style={{ backgroundColor: `#${driver.color_hex}` }}
-                >
+              {/* Team logo */}
+              {team.logo_url && (
+                <div className="w-32 h-32 lg:w-48 lg:h-48 rounded-corner overflow-hidden bg-zinc-900 flex items-center justify-center flex-shrink-0 p-4 lg:p-6">
                   <img
-                    src={headshotUrl}
-                    alt={driver.full_name}
-                    className="w-full h-full object-cover object-top"
+                    src={team.logo_url}
+                    alt={team.team_name}
+                    className="w-full h-full object-contain"
                   />
                 </div>
               )}
               
-              {/* Driver info */}
+              {/* Team info */}
               <div className="flex-1">
-                <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-3">
-                  <div 
-                    className="text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm f1-display-bold"
-                    style={{ backgroundColor: `#${driver.color_hex}` }}
-                  >
-                    #{driver.driver_number}
-                  </div>
-                  {driver.team_logo_url && (
-                    <img 
-                      src={driver.team_logo_url} 
-                      alt={driver.primary_team_name}
-                      className="h-6 lg:h-8 object-contain"
-                    />
-                  )}
-                </div>
                 <h1
                   className="text-white f1-display-bold text-3xl lg:text-5xl leading-tight uppercase mb-1 lg:mb-2"
                   style={{
                     textShadow: '0 2px 12px rgba(0, 0, 0, 0.9)',
                   }}
                 >
-                  {driver.full_name}
+                  {team.display_name || team.team_name}
                 </h1>
-                <h2
-                  onClick={() => driver.primary_team_id && navigate(`/teams/${driver.primary_team_id}`)}
-                  className="text-zinc-300 f1-display-regular text-lg lg:text-2xl leading-tight cursor-pointer hover:text-white transition-colors"
-                  style={{
-                    textShadow: '0 2px 8px rgba(0, 0, 0, 0.9)',
-                  }}
-                >
-                  {driver.team_display_name || driver.primary_team_name}
-                </h2>
               </div>
 
               {/* Championship position badge */}
@@ -257,64 +225,115 @@ export const DriverDetails = () => {
           </div>
         </div>
 
+        {/* Current Drivers */}
+        <div className="bg-black rounded-corner p-4 lg:p-6">
+          <h2 className="text-white f1-display-bold text-lg lg:text-xl mb-3 lg:mb-4">Current Drivers</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
+            {drivers.map((driver) => {
+              const headshotUrl = driver.headshot_override || driver.headshot_url;
+              return (
+                <div
+                  key={driver.driver_id}
+                  onClick={() => navigate(`/drivers/${driver.driver_id}`)}
+                  className="relative overflow-hidden rounded-corner cursor-pointer group transition-transform hover:scale-[1.02]"
+                  style={{
+                    backgroundColor: `#${team.color_hex}`,
+                    aspectRatio: '16 / 9',
+                  }}
+                >
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+                  
+                  {/* Driver info */}
+                  <div className="absolute inset-0 flex items-center justify-between p-4 lg:p-6">
+                    <div className="z-10">
+                      <div className="text-white/80 text-xs lg:text-sm f1-display-regular mb-1">
+                        #{driver.driver_number}
+                      </div>
+                      <h3 className="text-white f1-display-bold text-xl lg:text-2xl mb-2">{driver.full_name}</h3>
+                      <div className="text-white/90 f1-display-regular text-sm lg:text-base">
+                        {driver.driver_points} pts
+                      </div>
+                    </div>
+                    
+                    {/* Driver headshot */}
+                    {headshotUrl && (
+                      <div className="absolute right-0 bottom-0 h-full w-1/2 overflow-hidden">
+                        <img
+                          src={headshotUrl}
+                          alt={driver.full_name}
+                          className="absolute top-0 left-0 w-full h-auto min-h-full object-cover object-top"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Hover effect */}
+                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Season Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4">
-          <div className="bg-black rounded-corner p-6">
+          <div className="bg-black rounded-corner p-4 lg:p-6">
             <div className="flex items-center gap-2 mb-2">
               <FontAwesomeIcon icon={faTrophy} className="text-yellow-400 text-sm" />
-              <div className="text-zinc-400 text-sm f1-display-regular">Points</div>
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular">Points</div>
             </div>
-            <div className="text-white f1-display-bold text-3xl">
+            <div className="text-white f1-display-bold text-2xl lg:text-3xl">
               {season_stats.total_points}
             </div>
           </div>
 
-          <div className="bg-black rounded-corner p-6">
+          <div className="bg-black rounded-corner p-4 lg:p-6">
             <div className="flex items-center gap-2 mb-2">
               <FontAwesomeIcon icon={faTrophy} className="text-yellow-400 text-sm" />
-              <div className="text-zinc-400 text-sm f1-display-regular">Wins</div>
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular">Wins</div>
             </div>
-            <div className="text-white f1-display-bold text-3xl">
+            <div className="text-white f1-display-bold text-2xl lg:text-3xl">
               {season_stats.wins}
             </div>
           </div>
 
-          <div className="bg-black rounded-corner p-6">
+          <div className="bg-black rounded-corner p-4 lg:p-6">
             <div className="flex items-center gap-2 mb-2">
               <FontAwesomeIcon icon={faMedal} className="text-orange-400 text-sm" />
-              <div className="text-zinc-400 text-sm f1-display-regular">Podiums</div>
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular">Podiums</div>
             </div>
-            <div className="text-white f1-display-bold text-3xl">
+            <div className="text-white f1-display-bold text-2xl lg:text-3xl">
               {season_stats.podiums}
             </div>
           </div>
 
-          <div className="bg-black rounded-corner p-6">
+          <div className="bg-black rounded-corner p-4 lg:p-6">
             <div className="flex items-center gap-2 mb-2">
               <FontAwesomeIcon icon={faFlagCheckered} className="text-green-400 text-sm" />
-              <div className="text-zinc-400 text-sm f1-display-regular">Points Finishes</div>
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular">Points Finishes</div>
             </div>
-            <div className="text-white f1-display-bold text-3xl">
+            <div className="text-white f1-display-bold text-2xl lg:text-3xl">
               {season_stats.points_finishes}
             </div>
           </div>
 
-          <div className="bg-black rounded-corner p-6">
+          <div className="bg-black rounded-corner p-4 lg:p-6">
             <div className="flex items-center gap-2 mb-2">
               <FontAwesomeIcon icon={faStopwatch} className="text-purple-400 text-sm" />
-              <div className="text-zinc-400 text-sm f1-display-regular">Fastest Laps</div>
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular">Fastest Laps</div>
             </div>
-            <div className="text-white f1-display-bold text-3xl">
+            <div className="text-white f1-display-bold text-2xl lg:text-3xl">
               {season_stats.fastest_laps}
             </div>
           </div>
 
-          <div className="bg-black rounded-corner p-6">
+          <div className="bg-black rounded-corner p-4 lg:p-6">
             <div className="flex items-center gap-2 mb-2">
               <FontAwesomeIcon icon={faFlagCheckered} className="text-zinc-400 text-sm" />
-              <div className="text-zinc-400 text-sm f1-display-regular">Races</div>
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular">Races</div>
             </div>
-            <div className="text-white f1-display-bold text-3xl">
+            <div className="text-white f1-display-bold text-2xl lg:text-3xl">
               {season_stats.races_entered}
             </div>
           </div>
@@ -343,21 +362,6 @@ export const DriverDetails = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 lg:gap-4">
-                    {result.grid_position && (
-                      <div className="text-center min-w-[36px] lg:min-w-[48px]">
-                        <div className="text-zinc-400 text-[9px] lg:text-[10px] f1-display-regular">
-                          Grid P{result.grid_position}
-                        </div>
-                      </div>
-                    )}
-                    <div className={`f1-display-bold text-base lg:text-lg ${getPositionColor(result.finish_position)}`}>
-                      {formatPosition(result.finish_position)}
-                    </div>
-                    {result.fastest_lap && (
-                      <div className="w-4 h-4 lg:w-5 lg:h-5 bg-purple-600 rounded flex items-center justify-center">
-                        <FontAwesomeIcon icon={faStopwatch} className="text-white text-[8px] lg:text-[10px]" />
-                      </div>
-                    )}
                     {result.session_points > 0 && (
                       <div className="text-white f1-display-regular text-xs lg:text-sm min-w-10 lg:min-w-12 text-right">
                         +{result.session_points}
@@ -390,7 +394,7 @@ export const DriverDetails = () => {
                         className="absolute inset-y-0 left-0 rounded transition-all"
                         style={{ 
                           width: `${widthPercent}%`,
-                          backgroundColor: `#${driver.color_hex}`,
+                          backgroundColor: `#${team.color_hex}`,
                         }}
                       />
                       <div className="absolute inset-0 flex items-center px-1 lg:px-2">
@@ -398,9 +402,6 @@ export const DriverDetails = () => {
                           {round.cumulative_points} pts
                         </span>
                       </div>
-                    </div>
-                    <div className={`text-[10px] lg:text-xs f1-display-bold w-10 lg:w-12 text-right ${getPositionColor(round.finish_position)}`}>
-                      {formatPosition(round.finish_position)}
                     </div>
                   </div>
                 );
