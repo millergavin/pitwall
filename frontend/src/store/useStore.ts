@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface AppState {
   selectedSeason: number | null;
@@ -13,16 +14,27 @@ interface AppState {
   setSidebarWidth: (width: number) => void;
 }
 
-export const useStore = create<AppState>((set) => ({
-  selectedSeason: null,
-  selectedSession: null,
-  selectedDriver: null,
-  sidebarOpen: true,
-  sidebarWidth: 240, // Default sidebar width
-  setSelectedSeason: (season) => set({ selectedSeason: season }),
-  setSelectedSession: (session) => set({ selectedSession: session }),
-  setSelectedDriver: (driver) => set({ selectedDriver: driver }),
-  setSidebarOpen: (open) => set({ sidebarOpen: open }),
-  setSidebarWidth: (width) => set({ sidebarWidth: width }),
-}));
+export const useStore = create<AppState>()(
+  persist(
+    (set) => ({
+      selectedSeason: null,
+      selectedSession: null,
+      selectedDriver: null,
+      sidebarOpen: false, // Closed by default
+      sidebarWidth: 240, // Default sidebar width
+      setSelectedSeason: (season) => set({ selectedSeason: season }),
+      setSelectedSession: (session) => set({ selectedSession: session }),
+      setSelectedDriver: (driver) => set({ selectedDriver: driver }),
+      setSidebarOpen: (open) => set({ sidebarOpen: open }),
+      setSidebarWidth: (width) => set({ sidebarWidth: width }),
+    }),
+    {
+      name: 'pitwall-storage', // localStorage key
+      partialize: (state) => ({ 
+        sidebarOpen: state.sidebarOpen,
+        sidebarWidth: state.sidebarWidth,
+      }), // Only persist sidebar state
+    }
+  )
+);
 

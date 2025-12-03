@@ -24,6 +24,16 @@ export const api = {
     return response.json();
   },
 
+  driverDetail: async (driverId: string, season: number = 2025) => {
+    const url = new URL(`${API_BASE_URL}/drivers/${driverId}`, window.location.origin);
+    url.searchParams.append('season', season.toString());
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
   teamsRoster: async (season: number = 2025) => {
     const url = new URL(`${API_BASE_URL}/teams/roster`, window.location.origin);
     url.searchParams.append('season', season.toString());

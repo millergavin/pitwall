@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { PageLayout } from '../components/PageLayout';
 import { NavSidebar } from '../components/NavSidebar';
 import { FontAwesomeIcon } from '../lib/fontawesome';
@@ -296,13 +297,35 @@ export const Dashboard = () => {
     <PageLayout pageTitle="Dashboard" sidebar={<NavSidebar />}>
       <div className="flex flex-col h-240">
         {/* Championship Snapshots - 3 equal columns */}
-        <div className="grid grid-cols-3 gap-6 flex-1 min-h-0">
+        <motion.div 
+          className="grid grid-cols-3 gap-6 flex-1 min-h-0"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.1,
+              },
+            },
+          }}
+        >
           {/* Latest Meeting - Column 1 */}
           {latestMeeting && (
-            <div className="flex flex-col h-full">
-              <div
+            <motion.div 
+              className="flex flex-col h-full"
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 },
+              }}
+            >
+              <motion.div
                 onClick={() => navigate(`/grand-prix/${latestMeeting.meeting_id}`)}
-                className="relative overflow-hidden rounded-corner cursor-pointer group transition-transform hover:scale-[1.01] active:scale-[0.99] bg-black h-full flex flex-col"
+                className="relative overflow-hidden rounded-corner cursor-pointer bg-black h-full flex flex-col"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
                 {/* Cover image */}
                 {coverImageUrl ? (
@@ -419,23 +442,40 @@ export const Dashboard = () => {
 
                 {/* Hover effect */}
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none" />
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
 
           {/* Driver Championship - Column 2 */}
-          <div 
-            onClick={() => navigate('/championship')}
-            className="bg-black rounded-corner p-6 cursor-pointer hover:bg-zinc-900 transition-colors flex flex-col h-full"
+          <motion.div 
+            className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden"
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 },
+            }}
+            whileHover={{ y: -4 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <h2 className="text-white f1-display-bold text-xl mb-4">
-              Driver Championship
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white f1-display-bold text-xl">
+                Driver Championship
+              </h2>
+              <button
+                onClick={() => navigate('/championship')}
+                className="text-zinc-400 hover:text-white text-xs f1-display-bold transition-colors"
+              >
+                VIEW ALL
+              </button>
+            </div>
             <div className="space-y-3 overflow-auto flex-1">
               {top10Drivers.map((driver, idx) => (
                 <div
                   key={driver.driver_id}
-                  className="flex items-center justify-between p-3 rounded"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/drivers/${driver.driver_id}`);
+                  }}
+                  className="flex items-center justify-between p-3 rounded cursor-pointer hover:bg-zinc-900 transition-colors"
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <div className="text-zinc-400 f1-display-bold text-sm w-6">
@@ -460,16 +500,29 @@ export const Dashboard = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Constructor Championship - Column 3 */}
-          <div 
-            onClick={() => navigate('/championship')}
-            className="bg-black rounded-corner p-6 cursor-pointer hover:bg-zinc-900 transition-colors flex flex-col h-full"
+          <motion.div 
+            className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden"
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 },
+            }}
+            whileHover={{ y: -4 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <h2 className="text-white f1-display-bold text-xl mb-4">
-              Constructor Championship
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white f1-display-bold text-xl">
+                Constructor Championship
+              </h2>
+              <button
+                onClick={() => navigate('/championship')}
+                className="text-zinc-400 hover:text-white text-xs f1-display-bold transition-colors"
+              >
+                VIEW ALL
+              </button>
+            </div>
             <div className="space-y-3 overflow-auto flex-1">
               {top10Constructors.map((team, idx) => (
                 <div
@@ -504,8 +557,8 @@ export const Dashboard = () => {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </PageLayout>
   );

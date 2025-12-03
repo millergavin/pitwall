@@ -21,6 +21,7 @@
     "@visx/scale": "^3.12.0",
     "@visx/shape": "^3.12.0",
     "@visx/tooltip": "^3.12.0",
+    "framer-motion": "^12.23.25",
     "mapbox-gl": "^3.16.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

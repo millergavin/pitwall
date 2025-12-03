@@ -54,6 +54,8 @@ export const CircuitDetails = () => {
   const [circuit, setCircuit] = useState<CircuitData | null>(null);
   const [latestMeeting, setLatestMeeting] = useState<MeetingData | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [allCircuitImages, setAllCircuitImages] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [meetingCoverUrl, setMeetingCoverUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,12 +83,12 @@ export const CircuitDetails = () => {
         try {
           const images = await api.images({
             circuitId: circuitData.circuit_id,
-            coverOnly: true,
           });
           if (images && images.length > 0) {
-            const imgUrl = `/assets/circuit_image/${images[0].file_path}`;
-            setCoverImageUrl(imgUrl);
-            setMeetingCoverUrl(imgUrl);
+            const imageUrls = images.map((img: any) => `/assets/circuit_image/${img.file_path}`);
+            setAllCircuitImages(imageUrls);
+            setCoverImageUrl(imageUrls[0]);
+            setMeetingCoverUrl(imageUrls[0]);
           }
         } catch {
           // Ignore image errors
@@ -123,6 +125,24 @@ export const CircuitDetails = () => {
 
     fetchData();
   }, [circuitId]);
+
+  // Cycle through images every 5 seconds
+  useEffect(() => {
+    if (allCircuitImages.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % allCircuitImages.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [allCircuitImages.length]);
+
+  // Update cover image when index changes
+  useEffect(() => {
+    if (allCircuitImages.length > 0) {
+      setCoverImageUrl(allCircuitImages[currentImageIndex]);
+    }
+  }, [currentImageIndex, allCircuitImages]);
 
   const formatLapTime = (ms: number): string => {
     const totalSeconds = ms / 1000;
@@ -173,7 +193,7 @@ export const CircuitDetails = () => {
       pageTitle={getCircuitDisplayName(circuit)}
       sidebar={<NavSidebar />}
     >
-      <div className="flex flex-col h-full gap-6">
+      <div className="flex flex-col gap-6 overflow-auto">
         {/* Back button */}
         <div>
           <Button 
@@ -189,14 +209,18 @@ export const CircuitDetails = () => {
         {/* Hero Section */}
         <div 
           className="relative rounded-corner overflow-hidden"
-          style={{ height: '400px' }}
+          style={{ height: '50vh', minHeight: '500px' }}
         >
-          {/* Cover image */}
+          {/* Cover image with fade transition */}
           {coverImageUrl ? (
             <img
+              key={currentImageIndex}
               src={coverImageUrl}
               alt={circuit.circuit_short_name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-opacity duration-1000"
+              style={{ 
+                animation: 'fadeIn 2s ease-in-out',
+              }}
             />
           ) : (
             <div className="w-full h-full bg-black" />
@@ -243,7 +267,7 @@ export const CircuitDetails = () => {
         </div>
 
         {/* Content Grid: Track SVG on left, Stats on right */}
-        <div className="flex-1 grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-6 pb-6">
           {/* Left: Track Layout SVG */}
           <div className="bg-black rounded-corner p-8 flex items-center justify-center">
             {circuit.circuit_svg ? (
@@ -262,14 +286,12 @@ export const CircuitDetails = () => {
             {/* Latest Meeting */}
             {latestMeeting && (
               <div>
-                <div className="text-zinc-400 text-xs f1-display-regular mb-3 uppercase tracking-wide">
-                  Latest Grand Prix
-                </div>
+
                 <div
                   onClick={() => navigate(`/grand-prix/${latestMeeting.meeting_id}`)}
                   className="relative overflow-hidden rounded-corner cursor-pointer group transition-transform hover:scale-[1.01] active:scale-[0.99]"
                   style={{
-                    aspectRatio: '16 / 9',
+                    aspectRatio: '16 / 6',
                     backgroundColor: '#000',
                   }}
                 >
@@ -295,10 +317,10 @@ export const CircuitDetails = () => {
 
                   {/* Content */}
                   <div className="relative h-full flex flex-col justify-between p-5">
-                    {/* Top section - Round number and flag */}
+                    {/* Top section - Latest Grand Prix chip and flag */}
                     <div className="flex justify-between items-start">
                       <div className="bg-f1-red text-white px-2.5 py-1 rounded text-xs f1-display-bold">
-                        ROUND {latestMeeting.round_number}
+                        LATEST GRAND PRIX
                       </div>
                       {latestMeeting.flag_url && (
                         <div className="w-8 h-8 rounded-full overflow-hidden shadow-lg flex-shrink-0">

@@ -12,13 +12,13 @@ export const GlobalHeader = ({ pageTitle = 'Page Title' }: GlobalHeaderProps) =>
   const { sidebarOpen, setSidebarOpen, sidebarWidth } = useStore();
 
   return (
-    <header className="bg-1 py-3 flex items-center w-full flex-shrink-0">
+    <header className="bg-1 pt-2 pb-1 flex items-center w-full flex-shrink-0">
       {/* Left: Sidebar toggle + Logo */}
       <div
         className="flex items-center"
         style={{ width: `${sidebarWidth}px` }}
       >
-        <div className="flex items-center gap-2 px-8 py-1">
+        <div className="flex items-center gap-2 px-4 py-1">
           <IconButton
             size="md"
             variant="text"

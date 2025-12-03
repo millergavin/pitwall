@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/PageLayout';
 import { NavSidebar } from '../components/NavSidebar';
 import { DriverCard, type DriverCardData } from '../components/DriverCard';
 import { api } from '../api/client';
 
 export const Drivers = () => {
+  const navigate = useNavigate();
   const [season, setSeason] = useState(2025);
   const [drivers, setDrivers] = useState<DriverCardData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,10 +72,7 @@ export const Drivers = () => {
               <DriverCard
                 key={driver.driver_id}
                 driver={driver}
-                onClick={() => {
-                  // TODO: Navigate to driver detail page
-                  console.log('Clicked driver:', driver.full_name);
-                }}
+                onClick={() => navigate(`/drivers/${driver.driver_id}`)}
               />
             ))}
           </div>

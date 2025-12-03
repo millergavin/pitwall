@@ -223,6 +223,16 @@ button:focus {
   border-radius: var(--corner-radius, 6px);
 }
 
+/* Fade in animation for image transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* White overlay utility classes - Tailwind v4 syntax */
 @utility bg-overlay-50 {
   background-color: rgb(255 255 255 / 0.05);

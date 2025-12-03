@@ -7,6 +7,7 @@ import { GrandPrix } from './pages/GrandPrix';
 import { MeetingDetails } from './pages/MeetingDetails';
 import { SessionDetails } from './pages/SessionDetails';
 import { Drivers } from './pages/Drivers';
+import { DriverDetails } from './pages/DriverDetails';
 import { Teams } from './pages/Teams';
 import { Admin } from './pages/Admin';
 
@@ -21,6 +22,7 @@ function App() {
       <Route path="/grand-prix/:meetingId" element={<MeetingDetails />} />
       <Route path="/sessions/:sessionId" element={<SessionDetails />} />
       <Route path="/drivers" element={<Drivers />} />
+      <Route path="/drivers/:driverId" element={<DriverDetails />} />
       <Route path="/teams" element={<Teams />} />
       <Route path="/admin" element={<Admin />} />
     </Routes>
