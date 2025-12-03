@@ -14,12 +14,12 @@ export const NavMenuItem = ({ to, children }: NavMenuItemProps) => {
     <Link
       to={to}
       className={`
-        block text-base font-medium px-3 py-2 rounded-corner
+        block text-base font-medium px-3 py-1.5 rounded-corner
         transition-colors duration-150
         no-underline
         ${isActive 
           ? 'bg-overlay-100 text-white' 
-          : 'bg-transparent text-zinc-600 hover:bg-overlay-50'
+          : 'bg-transparent text-zinc-400 hover:bg-overlay-50'
         }
       `}
     >

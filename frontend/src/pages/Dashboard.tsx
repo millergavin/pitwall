@@ -59,7 +59,7 @@ interface StandingsData {
 export const Dashboard = () => {
   const navigate = useNavigate();
   const [latestMeeting, setLatestMeeting] = useState<MeetingData | null>(null);
-  const [raceSession, setRaceSession] = useState<SessionData | null>(null);
+  const [, setRaceSession] = useState<SessionData | null>(null);
   const [topFinishers, setTopFinishers] = useState<ClassificationData[]>([]);
   const [fastestLapDriver, setFastestLapDriver] = useState<string | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
@@ -91,7 +91,7 @@ export const Dashboard = () => {
             foundMeeting = sortedMeetings[0];
             
             // Fetch sessions for this meeting
-            const sessions = await api.meetingSessions(foundMeeting.meeting_id);
+            const sessions = await api.meetingSessions(foundMeeting!.meeting_id);
             foundRaceSession = sessions.find((s: SessionData) => s.session_type === 'race') || null;
             
             if (foundRaceSession) break;

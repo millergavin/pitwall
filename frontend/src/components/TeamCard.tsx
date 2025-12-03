@@ -78,7 +78,7 @@ export const TeamCard = ({ team, onClick }: TeamCardProps) => {
           {hasCarImage && (
             <div className="absolute inset-0 flex items-center justify-start px-6 pb-6">
               <img
-                src={team.car_image_url}
+                src={team.car_image_url || undefined}
                 alt={`${team.team_name} car`}
                 className="h-full w-[70%] object-contain"
                 onError={() => setImageError(true)}
