@@ -68,6 +68,8 @@ export const Dashboard = () => {
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [driverStandings, setDriverStandings] = useState<StandingsData[]>([]);
   const [constructorStandings, setConstructorStandings] = useState<StandingsData[]>([]);
+  const [driversRoster, setDriversRoster] = useState<any[]>([]);
+  const [teamsRoster, setTeamsRoster] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,13 +142,17 @@ export const Dashboard = () => {
 
         // Fetch championship standings
         const currentSeason = currentYear;
-        const [drivers, constructors] = await Promise.all([
+        const [drivers, constructors, driversRosterData, teamsRosterData] = await Promise.all([
           api.standings.drivers(currentSeason),
           api.standings.constructors(currentSeason),
+          api.driversRoster(currentSeason),
+          api.teamsRoster(currentSeason),
         ]);
         
         setDriverStandings(drivers);
         setConstructorStandings(constructors);
+        setDriversRoster(driversRosterData);
+        setTeamsRoster(teamsRosterData);
         
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
@@ -500,6 +506,47 @@ export const Dashboard = () => {
                 </div>
               ))}
             </div>
+            
+            {/* Top 3 Drivers with Images */}
+            {top10Drivers.length >= 3 && (
+              <div className="mt-4 pt-4 border-t border-zinc-900">
+                <div className="grid grid-cols-3 gap-2">
+                  {top10Drivers.slice(0, 3).map((driver, idx) => {
+                    const driverData = driversRoster.find((d: any) => d.driver_id === driver.driver_id);
+                    const headshot = driverData?.headshot_override || driverData?.headshot_url;
+                    
+                    return (
+                      <div
+                        key={driver.driver_id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/drivers/${driver.driver_id}`);
+                        }}
+                        className="relative aspect-[3/4] rounded-corner overflow-hidden cursor-pointer group"
+                        style={{ backgroundColor: `#${driver.color_hex}20` }}
+                      >
+                        {headshot && (
+                          <img
+                            src={headshot}
+                            alt={driver.driver_name || ''}
+                            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <div className="text-white f1-display-bold text-2xl leading-none mb-0.5">
+                            P{idx + 1}
+                          </div>
+                          <div className="text-white text-[10px] f1-display-regular leading-tight">
+                            {driver.name_acronym}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </motion.div>
 
           {/* Constructor Championship - Column 3 */}
@@ -557,6 +604,47 @@ export const Dashboard = () => {
                 </div>
               ))}
             </div>
+            
+            {/* Top 3 Teams with Car Images */}
+            {top10Constructors.length >= 3 && (
+              <div className="mt-4 pt-4 border-t border-zinc-900">
+                <div className="grid grid-cols-3 gap-2">
+                  {top10Constructors.slice(0, 3).map((team, idx) => {
+                    const teamData = teamsRoster.find((t: any) => t.team_id === team.team_id);
+                    const carImage = teamData?.car_image_url;
+                    
+                    return (
+                      <div
+                        key={team.team_id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/championship');
+                        }}
+                        className="relative aspect-[3/4] rounded-corner overflow-hidden cursor-pointer group"
+                        style={{ backgroundColor: `#${team.color_hex}20` }}
+                      >
+                        {carImage && (
+                          <img
+                            src={carImage}
+                            alt={team.team_name || ''}
+                            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <div className="text-white f1-display-bold text-2xl leading-none mb-0.5">
+                            P{idx + 1}
+                          </div>
+                          {team.logo_url && (
+                            <img src={team.logo_url} alt={team.team_name} className="w-8 h-8 object-contain" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       </div>

@@ -844,16 +844,35 @@ def get_team_detail(team_id: str, season: int = 2025):
             cur.execute("""
                 SELECT 
                     MAX(cumulative_points) as total_points,
-                    COUNT(DISTINCT CASE WHEN finish_position = 1 THEN round_number END) as wins,
-                    COUNT(DISTINCT CASE WHEN finish_position <= 3 THEN round_number END) as podiums,
-                    COUNT(DISTINCT CASE WHEN finish_position <= 10 THEN round_number END) as points_finishes,
-                    COUNT(DISTINCT round_number) as races_entered,
-                    COUNT(CASE WHEN fastest_lap THEN 1 END) as fastest_laps
+                    COUNT(DISTINCT round_number) as races_entered
                 FROM gold.constructor_standings_progression
                 WHERE team_id = %s AND season = %s
             """, (team_id, season))
             
-            season_stats = cur.fetchone()
+            season_stats_base = cur.fetchone()
+            
+            # Get wins, podiums from driver results
+            cur.execute("""
+                SELECT 
+                    COUNT(DISTINCT CASE WHEN sc.finish_position = 1 THEN sc.session_id END) as wins,
+                    COUNT(DISTINCT CASE WHEN sc.finish_position <= 3 THEN sc.session_id END) as podiums,
+                    COUNT(DISTINCT CASE WHEN sc.finish_position <= 10 THEN sc.session_id END) as points_finishes,
+                    COUNT(CASE WHEN sc.fastest_lap THEN 1 END) as fastest_laps
+                FROM gold.session_classification sc
+                WHERE sc.team_id = %s AND sc.season = %s
+            """, (team_id, season))
+            
+            season_stats_detail = cur.fetchone()
+            
+            # Combine the stats
+            season_stats = {
+                "total_points": season_stats_base['total_points'],
+                "wins": season_stats_detail['wins'],
+                "podiums": season_stats_detail['podiums'],
+                "points_finishes": season_stats_detail['points_finishes'],
+                "races_entered": season_stats_base['races_entered'],
+                "fastest_laps": season_stats_detail['fastest_laps'],
+            }
             
             # Get championship position
             cur.execute("""
