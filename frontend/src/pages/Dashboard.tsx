@@ -454,7 +454,8 @@ export const Dashboard = () => {
 
           {/* Driver Championship - Column 2 */}
           <motion.div 
-            className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden"
+            onClick={() => navigate('/championship')}
+            className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden cursor-pointer"
             variants={{
               hidden: { opacity: 0, y: 20 },
               visible: { opacity: 1, y: 0 },
@@ -462,16 +463,10 @@ export const Dashboard = () => {
             whileHover={{ y: -4 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <h2 className="text-white f1-display-bold text-xl">
                 Driver Championship
               </h2>
-              <button
-                onClick={() => navigate('/championship')}
-                className="text-zinc-400 hover:text-white text-xs f1-display-bold transition-colors"
-              >
-                VIEW ALL
-              </button>
             </div>
             
             {/* Top 3 Drivers with Images */}
@@ -490,7 +485,7 @@ export const Dashboard = () => {
                           navigate(`/drivers/${driver.driver_id}`);
                         }}
                         className="relative aspect-[3/4] rounded-corner overflow-hidden cursor-pointer group"
-                        style={{ backgroundColor: `#${driver.color_hex}20` }}
+                        style={{ backgroundColor: `#${driver.color_hex}` }}
                       >
                         {headshot && (
                           <img
@@ -552,7 +547,8 @@ export const Dashboard = () => {
 
           {/* Constructor Championship - Column 3 */}
           <motion.div 
-            className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden"
+            onClick={() => navigate('/championship')}
+            className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden cursor-pointer"
             variants={{
               hidden: { opacity: 0, y: 20 },
               visible: { opacity: 1, y: 0 },
@@ -560,16 +556,10 @@ export const Dashboard = () => {
             whileHover={{ y: -4 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <h2 className="text-white f1-display-bold text-xl">
                 Constructor Championship
               </h2>
-              <button
-                onClick={() => navigate('/championship')}
-                className="text-zinc-400 hover:text-white text-xs f1-display-bold transition-colors"
-              >
-                VIEW ALL
-              </button>
             </div>
             
             {/* Top 3 Teams with Car Images */}
@@ -588,7 +578,7 @@ export const Dashboard = () => {
                           navigate('/championship');
                         }}
                         className="relative aspect-[3/4] rounded-corner overflow-hidden cursor-pointer group"
-                        style={{ backgroundColor: `#${team.color_hex}20` }}
+                        style={{ backgroundColor: `#${team.color_hex}` }}
                       >
                         {carImage && (
                           <img
