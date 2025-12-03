@@ -258,28 +258,28 @@ export const MeetingDetails = () => {
         </div>
 
         {/* Meeting Details */}
-        <div className="bg-black rounded-corner p-6">
-          <div className="grid grid-cols-4 gap-6">
+        <div className="bg-black rounded-corner p-4 lg:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             <div>
-              <div className="text-zinc-400 text-sm f1-display-regular mb-1">Circuit</div>
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular mb-1">Circuit</div>
               <button
                 onClick={() => navigate(`/circuits/${meeting.circuit_id}`)}
-                className="text-white f1-display-bold text-lg hover:text-f1-red transition-colors text-left"
+                className="text-white f1-display-bold text-base lg:text-lg hover:text-f1-red transition-colors text-left"
               >
                 {getCircuitDisplayName()}
               </button>
             </div>
             <div>
-              <div className="text-zinc-400 text-sm f1-display-regular mb-1">Location</div>
-              <div className="text-white f1-display-bold text-lg">{meeting.location}</div>
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular mb-1">Location</div>
+              <div className="text-white f1-display-bold text-base lg:text-lg">{meeting.location}</div>
             </div>
             <div>
-              <div className="text-zinc-400 text-sm f1-display-regular mb-1">Country</div>
-              <div className="text-white f1-display-bold text-lg">{meeting.country_name}</div>
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular mb-1">Country</div>
+              <div className="text-white f1-display-bold text-base lg:text-lg">{meeting.country_name}</div>
             </div>
             <div>
-              <div className="text-zinc-400 text-sm f1-display-regular mb-1">Date</div>
-              <div className="text-white f1-display-bold text-lg">
+              <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular mb-1">Date</div>
+              <div className="text-white f1-display-bold text-base lg:text-lg">
                 {new Date(meeting.date_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(meeting.date_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </div>
             </div>
@@ -288,30 +288,30 @@ export const MeetingDetails = () => {
 
         {/* Sessions List */}
         <div className="flex-1">
-          <h2 className="text-white f1-display-bold text-2xl mb-4">Sessions</h2>
-          <div className="grid grid-cols-1 gap-4">
+          <h2 className="text-white f1-display-bold text-xl lg:text-2xl mb-3 lg:mb-4">Sessions</h2>
+          <div className="grid grid-cols-1 gap-3 lg:gap-4">
             {sessions.map((session) => (
               <div
                 key={session.session_id}
                 onClick={() => handleSessionClick(session.session_id)}
-                className="bg-black rounded-corner p-6 cursor-pointer hover:bg-zinc-800 transition-colors group"
+                className="bg-black rounded-corner p-4 lg:p-6 cursor-pointer hover:bg-zinc-800 transition-colors group"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 lg:gap-4 flex-1">
                     {/* Session icon */}
-                    <div className={`w-12 h-12 rounded-full ${getSessionIcon(session.session_type).bgColor} flex items-center justify-center`}>
+                    <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full ${getSessionIcon(session.session_type).bgColor} flex items-center justify-center flex-shrink-0`}>
                       <FontAwesomeIcon 
                         icon={getSessionIcon(session.session_type).icon} 
-                        className="text-white text-lg"
+                        className="text-white text-base lg:text-lg"
                       />
                     </div>
                     
                     {/* Session info */}
-                    <div>
-                      <h3 className="text-white f1-display-bold text-xl mb-1">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white f1-display-bold text-lg lg:text-xl mb-1 truncate">
                         {getSessionDisplayName(session.session_type)}
                       </h3>
-                      <p className="text-zinc-400 f1-display-regular text-sm">
+                      <p className="text-zinc-400 f1-display-regular text-xs lg:text-sm truncate">
                         {formatDate(session.start_time)}
                       </p>
                     </div>
@@ -319,17 +319,17 @@ export const MeetingDetails = () => {
 
                   {/* Winner if available */}
                   {session.winner_driver_name && (
-                    <div className="text-right">
-                      <div className="text-zinc-400 text-sm f1-display-regular mb-1">Winner</div>
-                      <div className="text-white f1-display-bold text-lg">
+                    <div className="text-right hidden md:block flex-shrink-0 ml-4">
+                      <div className="text-zinc-400 text-xs lg:text-sm f1-display-regular mb-1">Winner</div>
+                      <div className="text-white f1-display-bold text-base lg:text-lg">
                         {session.winner_driver_name}
                       </div>
                     </div>
                   )}
 
                   {/* Arrow */}
-                  <div className="text-zinc-600 group-hover:text-zinc-400 transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="text-zinc-600 group-hover:text-zinc-400 transition-colors flex-shrink-0 ml-2">
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>

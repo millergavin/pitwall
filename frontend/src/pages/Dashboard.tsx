@@ -295,10 +295,10 @@ export const Dashboard = () => {
 
   return (
     <PageLayout pageTitle="Dashboard" sidebar={<NavSidebar />}>
-      <div className="flex flex-col h-240">
-        {/* Championship Snapshots - 3 equal columns */}
+      <div className="flex flex-col h-full">
+        {/* Championship Snapshots - 3 equal columns on desktop, stack on mobile */}
         <motion.div 
-          className="grid grid-cols-3 gap-6 flex-1 min-h-0"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden"
           initial="hidden"
           animate="visible"
           variants={{
@@ -314,7 +314,7 @@ export const Dashboard = () => {
           {/* Latest Meeting - Column 1 */}
           {latestMeeting && (
             <motion.div 
-              className="flex flex-col h-full"
+              className="flex flex-col min-h-[500px] lg:h-full"
               variants={{
                 hidden: { opacity: 0, y: 20 },
                 visible: { opacity: 1, y: 0 },
@@ -378,7 +378,7 @@ export const Dashboard = () => {
 
                     {/* Race Results Summary */}
                     {topFinishers.length > 0 && (
-                      <div className="bg-black/60 backdrop-blur-sm rounded-lg p-6 space-y-8 max-h-[80%] overflow-auto">
+                      <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3 lg:p-6 space-y-4 lg:space-y-8 max-h-[80%] overflow-auto">
                         {topFinishers.map((finisher, idx) => {
                           const positionChange = finisher.grid_position && finisher.finish_position
                             ? finisher.grid_position - finisher.finish_position
@@ -386,48 +386,48 @@ export const Dashboard = () => {
                           const isFastestLap = finisher.driver_name === fastestLapDriver;
                           
                           return (
-                            <div key={finisher.driver_id} className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 flex-shrink-0 min-w-0" style={{ maxWidth: '50%' }}>
-                                <div className="text-white f1-display-bold text-base w-8 flex-shrink-0">
+                            <div key={finisher.driver_id} className="flex items-center justify-between gap-2 lg:gap-3">
+                              <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0 min-w-0" style={{ maxWidth: '50%' }}>
+                                <div className="text-white f1-display-bold text-sm lg:text-base w-6 lg:w-8 flex-shrink-0">
                                   {idx + 1}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-white f1-display-bold text-sm truncate">
+                                  <div className="text-white f1-display-bold text-xs lg:text-sm truncate">
                                     {finisher.driver_name}
                                   </div>
-                                  <div className="text-zinc-400 text-[10px] f1-display-regular truncate">
+                                  <div className="text-zinc-400 text-[9px] lg:text-[10px] f1-display-regular truncate">
                                     {finisher.team_name}
                                   </div>
                                 </div>
                                 {isFastestLap && (
-                                  <div className="w-5 h-5 bg-purple-600 rounded flex items-center justify-center flex-shrink-0 ml-1">
-                                    <FontAwesomeIcon icon={faStopwatch} className="text-white text-[10px]" />
+                                  <div className="w-4 h-4 lg:w-5 lg:h-5 bg-purple-600 rounded flex items-center justify-center flex-shrink-0 ml-1">
+                                    <FontAwesomeIcon icon={faStopwatch} className="text-white text-[8px] lg:text-[10px]" />
                                   </div>
                                 )}
                               </div>
-                              <div className="flex items-center gap-3 flex-shrink-0">
+                              <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
                                 {/* Grid position and change */}
                                 {finisher.grid_position && (
-                                  <div className="text-center min-w-[48px]">
-                                    <div className="text-zinc-400 text-[10px] f1-display-regular">
+                                  <div className="text-center min-w-[40px] lg:min-w-[48px]">
+                                    <div className="text-zinc-400 text-[9px] lg:text-[10px] f1-display-regular">
                                       P{finisher.grid_position}
                                     </div>
                                     {positionChange !== null && positionChange !== 0 && (
-                                      <div className={`text-[10px] f1-display-bold ${positionChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                      <div className={`text-[9px] lg:text-[10px] f1-display-bold ${positionChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
                                         {positionChange > 0 ? `+${positionChange}` : positionChange}
                                       </div>
                                     )}
                                   </div>
                                 )}
                                 {/* Time */}
-                                <div className="text-right min-w-24">
-                                  <div className="text-white f1-display-regular text-xs">
+                                <div className="text-right min-w-16 lg:min-w-24">
+                                  <div className="text-white f1-display-regular text-[10px] lg:text-xs">
                                     {idx === 0 ? formatDuration(finisher.duration_ms) : formatGap(finisher.gap_to_leader_ms)}
                                   </div>
                                 </div>
                                 {/* Points */}
                                 {finisher.points !== null && finisher.points > 0 && (
-                                  <div className="text-white f1-display-regular text-xs min-w-16 text-right">
+                                  <div className="text-white f1-display-regular text-[10px] lg:text-xs min-w-12 lg:min-w-16 text-right">
                                     +{finisher.points}
                                   </div>
                                 )}

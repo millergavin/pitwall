@@ -10,12 +10,25 @@ interface PageLayoutProps {
 }
 
 export const PageLayout = ({ children, pageTitle, sidebar }: PageLayoutProps) => {
-  const { sidebarOpen, sidebarWidth } = useStore();
+  const { sidebarOpen, setSidebarOpen, sidebarWidth } = useStore();
 
   // Update document title when pageTitle changes
   useEffect(() => {
     document.title = pageTitle ? `${pageTitle} / PITWALL` : 'PITWALL';
   }, [pageTitle]);
+
+  // Keyboard shortcut: Shift+S to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.shiftKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setSidebarOpen(!sidebarOpen);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [sidebarOpen, setSidebarOpen]);
 
   return (
     <div className="h-screen bg-0 flex flex-col">

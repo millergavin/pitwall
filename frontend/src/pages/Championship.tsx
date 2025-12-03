@@ -102,7 +102,7 @@ export const Championship = () => {
         <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
           {/* Standings Table */}
           {!loading && !error && (
-            <div className="bg-1 p-4 rounded-corner lg:w-[400px] flex-shrink-0 overflow-auto">
+            <div className="bg-1 p-3 lg:p-4 rounded-corner lg:w-[400px] flex-shrink-0 overflow-auto max-h-[400px] lg:max-h-none">
               <StandingsTable
                 data={data}
                 type={standingsType}
@@ -118,7 +118,7 @@ export const Championship = () => {
           )}
 
           {/* Chart */}
-          <div className="bg-1 p-4 rounded-corner flex-1 min-h-0 overflow-auto">
+          <div className="bg-1 p-3 lg:p-4 rounded-corner flex-1 min-h-[400px] lg:min-h-0 overflow-auto">
             {loading && (
               <div className="flex items-center justify-center h-full">
                 <p className="text-zinc-600">Loading...</p>

@@ -190,12 +190,12 @@ export const DriverDetails = () => {
           />
 
           {/* Content */}
-          <div className="absolute inset-0 flex items-end p-8">
-            <div className="flex items-end gap-6 w-full">
-              {/* Driver headshot */}
+          <div className="absolute inset-0 flex items-end p-4 lg:p-8">
+            <div className="flex items-end gap-3 lg:gap-6 w-full">
+              {/* Driver headshot - hide on mobile */}
               {headshotUrl && (
                 <div 
-                  className="w-48 h-48 rounded-corner overflow-hidden flex-shrink-0"
+                  className="hidden lg:block w-48 h-48 rounded-corner overflow-hidden flex-shrink-0"
                   style={{ backgroundColor: `#${driver.color_hex}` }}
                 >
                   <img
@@ -208,9 +208,9 @@ export const DriverDetails = () => {
               
               {/* Driver info */}
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-3">
                   <div 
-                    className="text-white px-3 py-1 rounded text-sm f1-display-bold"
+                    className="text-white px-2 lg:px-3 py-1 rounded text-xs lg:text-sm f1-display-bold"
                     style={{ backgroundColor: `#${driver.color_hex}` }}
                   >
                     #{driver.driver_number}
@@ -219,12 +219,12 @@ export const DriverDetails = () => {
                     <img 
                       src={driver.team_logo_url} 
                       alt={driver.primary_team_name}
-                      className="h-8 object-contain"
+                      className="h-6 lg:h-8 object-contain"
                     />
                   )}
                 </div>
                 <h1
-                  className="text-white f1-display-bold text-5xl leading-tight uppercase mb-2"
+                  className="text-white f1-display-bold text-3xl lg:text-5xl leading-tight uppercase mb-1 lg:mb-2"
                   style={{
                     textShadow: '0 2px 12px rgba(0, 0, 0, 0.9)',
                   }}
@@ -232,7 +232,7 @@ export const DriverDetails = () => {
                   {driver.full_name}
                 </h1>
                 <h2
-                  className="text-zinc-300 f1-display-regular text-2xl leading-tight"
+                  className="text-zinc-300 f1-display-regular text-lg lg:text-2xl leading-tight"
                   style={{
                     textShadow: '0 2px 8px rgba(0, 0, 0, 0.9)',
                   }}
@@ -244,10 +244,10 @@ export const DriverDetails = () => {
               {/* Championship position badge */}
               {championship_position && (
                 <div className="text-right flex-shrink-0">
-                  <div className="text-zinc-400 text-sm f1-display-regular mb-1">
+                  <div className="text-zinc-400 text-[10px] lg:text-sm f1-display-regular mb-1">
                     Championship Position
                   </div>
-                  <div className={`f1-display-bold text-6xl ${getPositionColor(championship_position)}`}>
+                  <div className={`f1-display-bold text-4xl lg:text-6xl ${getPositionColor(championship_position)}`}>
                     {formatPosition(championship_position)}
                   </div>
                 </div>
@@ -257,7 +257,7 @@ export const DriverDetails = () => {
         </div>
 
         {/* Season Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4">
           <div className="bg-black rounded-corner p-6">
             <div className="flex items-center gap-2 mb-2">
               <FontAwesomeIcon icon={faTrophy} className="text-yellow-400 text-sm" />
@@ -320,45 +320,45 @@ export const DriverDetails = () => {
         </div>
 
         {/* Two column layout for results and progression */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           {/* Recent Results */}
-          <div className="bg-black rounded-corner p-6">
-            <h2 className="text-white f1-display-bold text-xl mb-4">Recent Results</h2>
-            <div className="space-y-3">
+          <div className="bg-black rounded-corner p-4 lg:p-6">
+            <h2 className="text-white f1-display-bold text-lg lg:text-xl mb-3 lg:mb-4">Recent Results</h2>
+            <div className="space-y-2 lg:space-y-3">
               {recent_results.map((result) => (
                 <div
                   key={`${result.round_number}-${result.session_type}`}
-                  className="flex items-center justify-between p-3 bg-zinc-950 rounded hover:bg-zinc-900 transition-colors"
+                  className="flex items-center justify-between p-2 lg:p-3 bg-zinc-950 rounded hover:bg-zinc-900 transition-colors"
                 >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="text-2xl">{result.emoji_flag}</div>
+                  <div className="flex items-center gap-2 lg:gap-3 flex-1">
+                    <div className="text-lg lg:text-2xl">{result.emoji_flag}</div>
                     <div className="flex-1">
-                      <div className="text-white f1-display-bold text-sm">
+                      <div className="text-white f1-display-bold text-xs lg:text-sm">
                         {result.meeting_short_name}
                       </div>
-                      <div className="text-zinc-500 text-xs f1-display-regular">
+                      <div className="text-zinc-500 text-[10px] lg:text-xs f1-display-regular">
                         {getSessionTypeLabel(result.session_type)}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 lg:gap-4">
                     {result.grid_position && (
-                      <div className="text-center min-w-[48px]">
-                        <div className="text-zinc-400 text-[10px] f1-display-regular">
+                      <div className="text-center min-w-[36px] lg:min-w-[48px]">
+                        <div className="text-zinc-400 text-[9px] lg:text-[10px] f1-display-regular">
                           Grid P{result.grid_position}
                         </div>
                       </div>
                     )}
-                    <div className={`f1-display-bold text-lg ${getPositionColor(result.finish_position)}`}>
+                    <div className={`f1-display-bold text-base lg:text-lg ${getPositionColor(result.finish_position)}`}>
                       {formatPosition(result.finish_position)}
                     </div>
                     {result.fastest_lap && (
-                      <div className="w-5 h-5 bg-purple-600 rounded flex items-center justify-center">
-                        <FontAwesomeIcon icon={faStopwatch} className="text-white text-[10px]" />
+                      <div className="w-4 h-4 lg:w-5 lg:h-5 bg-purple-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon icon={faStopwatch} className="text-white text-[8px] lg:text-[10px]" />
                       </div>
                     )}
                     {result.session_points > 0 && (
-                      <div className="text-white f1-display-regular text-sm min-w-12 text-right">
+                      <div className="text-white f1-display-regular text-xs lg:text-sm min-w-10 lg:min-w-12 text-right">
                         +{result.session_points}
                       </div>
                     )}
@@ -369,9 +369,9 @@ export const DriverDetails = () => {
           </div>
 
           {/* Season Progression Chart */}
-          <div className="bg-black rounded-corner p-6">
-            <h2 className="text-white f1-display-bold text-xl mb-4">Season Progression</h2>
-            <div className="space-y-2">
+          <div className="bg-black rounded-corner p-4 lg:p-6">
+            <h2 className="text-white f1-display-bold text-lg lg:text-xl mb-3 lg:mb-4">Season Progression</h2>
+            <div className="space-y-1 lg:space-y-2">
               {season_progression.map((round) => {
                 const maxPoints = Math.max(...season_progression.map(r => r.cumulative_points));
                 const widthPercent = maxPoints > 0 ? (round.cumulative_points / maxPoints) * 100 : 0;
@@ -379,12 +379,12 @@ export const DriverDetails = () => {
                 return (
                   <div
                     key={round.round_number}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1 lg:gap-2"
                   >
-                    <div className="text-zinc-500 text-xs f1-display-regular w-6">
+                    <div className="text-zinc-500 text-[10px] lg:text-xs f1-display-regular w-5 lg:w-6">
                       R{round.round_number}
                     </div>
-                    <div className="flex-1 relative h-8">
+                    <div className="flex-1 relative h-6 lg:h-8">
                       <div 
                         className="absolute inset-y-0 left-0 rounded transition-all"
                         style={{ 
@@ -392,13 +392,13 @@ export const DriverDetails = () => {
                           backgroundColor: `#${driver.color_hex}`,
                         }}
                       />
-                      <div className="absolute inset-0 flex items-center px-2">
-                        <span className="text-white text-xs f1-display-bold z-10">
+                      <div className="absolute inset-0 flex items-center px-1 lg:px-2">
+                        <span className="text-white text-[10px] lg:text-xs f1-display-bold z-10">
                           {round.cumulative_points} pts
                         </span>
                       </div>
                     </div>
-                    <div className={`text-xs f1-display-bold w-12 text-right ${getPositionColor(round.finish_position)}`}>
+                    <div className={`text-[10px] lg:text-xs f1-display-bold w-10 lg:w-12 text-right ${getPositionColor(round.finish_position)}`}>
                       {formatPosition(round.finish_position)}
                     </div>
                   </div>
