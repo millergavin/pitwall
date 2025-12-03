@@ -1,0 +1,269 @@
+@import "tailwindcss";
+
+/* Base font size: 14px (dense, technical feel) */
+:root {
+  font-size: 14px; /* Base REM = 14px instead of 16px */
+  
+  /* System font stack - SF on Mac, system sans elsewhere */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", 
+               "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  
+  /* Monospace font for numeric/data */
+  --font-mono: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", 
+               "Source Code Pro", "Menlo", "Consolas", "DejaVu Sans Mono", monospace;
+  
+  /* Color variables - globally adjustable */
+  --bg-0: #0F0F0F; /* Base page background */
+  --bg-1: #000000; /* Container/object backgrounds */
+  --f1-red: #E10600;
+  --f1-bright-red: #FF1E00;
+  
+  /* Global corner radius */
+  --corner-radius: 6px;
+  
+  /* Text colors */
+  color: #ffffff;
+  background-color: var(--bg-0);
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-0);
+  color: #ffffff;
+}
+
+/* Reset button styles to remove default browser styling */
+button {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  outline: none;
+}
+
+button:focus {
+  outline: none;
+}
+
+/* Utility classes for colors */
+.bg-0 {
+  background-color: var(--bg-0);
+}
+
+.bg-1 {
+  background-color: var(--bg-1);
+}
+
+.text-f1-red {
+  color: var(--f1-red);
+}
+
+.text-f1-bright-red {
+  color: var(--f1-bright-red);
+}
+
+.bg-f1-red {
+  background-color: var(--f1-red);
+}
+
+.bg-f1-bright-red {
+  background-color: var(--f1-bright-red);
+}
+
+/* Monospace utility */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Formula 1 Display Font Face Declarations */
+@font-face {
+  font-family: 'Formula1 Display';
+  src: url('/assets/fonts/Formula1-Display-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Formula1 Display';
+  src: url('/assets/fonts/Formula1-Display-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Formula1 Display';
+  src: url('/assets/fonts/Formula1-Display-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Formula1 Display';
+  src: url('/assets/fonts/Formula1-Display-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Formula1 Display';
+  src: url('/assets/fonts/Formula1-Display-Wide.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: expanded;
+  font-display: swap;
+}
+
+/* Formula 1 Display semantic type styles */
+.f1-display {
+  font-family: 'Formula1 Display', sans-serif;
+  font-feature-settings: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.f1-display-regular {
+  font-family: 'Formula1 Display', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.f1-display-bold {
+  font-family: 'Formula1 Display', sans-serif;
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.f1-display-black {
+  font-family: 'Formula1 Display', sans-serif;
+  font-weight: 900;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.f1-display-italic {
+  font-family: 'Formula1 Display', sans-serif;
+  font-weight: 400;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.f1-display-wide {
+  font-family: 'Formula1 Display', sans-serif;
+  font-weight: 400;
+  font-stretch: expanded;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Button text styles - semantic typography */
+.button-sm {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500; /* Medium */
+  text-transform: uppercase;
+  letter-spacing: 0.12px;
+}
+
+.button-md {
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 500; /* Medium */
+  text-transform: uppercase;
+  letter-spacing: 0.14px;
+}
+
+.button-lg {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500; /* Medium */
+  text-transform: uppercase;
+  letter-spacing: 0.16px;
+}
+
+/* Page title semantic style */
+.page-title {
+  font-family: 'Formula1 Display', sans-serif;
+  font-weight: 700;
+  font-size: 1rem; /* 14px base */
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+/* Corner radius utility - uses global --corner-radius variable */
+@utility rounded-corner {
+  border-radius: var(--corner-radius, 6px);
+}
+
+/* White overlay utility classes - Tailwind v4 syntax */
+@utility bg-overlay-50 {
+  background-color: rgb(255 255 255 / 0.05);
+}
+
+@utility bg-overlay-100 {
+  background-color: rgb(255 255 255 / 0.10);
+}
+
+@utility bg-overlay-200 {
+  background-color: rgb(255 255 255 / 0.20);
+}
+
+@utility bg-overlay-300 {
+  background-color: rgb(255 255 255 / 0.30);
+}
+
+@utility bg-overlay-400 {
+  background-color: rgb(255 255 255 / 0.40);
+}
+
+@utility bg-overlay-500 {
+  background-color: rgb(255 255 255 / 0.50);
+}
+
+@utility bg-overlay-600 {
+  background-color: rgb(255 255 255 / 0.60);
+}
+
+@utility bg-overlay-700 {
+  background-color: rgb(255 255 255 / 0.70);
+}
+
+@utility bg-overlay-800 {
+  background-color: rgb(255 255 255 / 0.80);
+}
+
+@utility bg-overlay-900 {
+  background-color: rgb(255 255 255 / 0.90);
+}
+
+@utility bg-overlay-950 {
+  background-color: rgb(255 255 255 / 0.95);
+}

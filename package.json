@@ -1,0 +1,15 @@
+{
+  "name": "pitwall",
+  "version": "1.0.0",
+  "description": "This project uses a PostgreSQL database running in Docker, completely isolated from any existing Postgres instances on your machine.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

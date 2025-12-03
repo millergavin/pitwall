@@ -1,0 +1,251 @@
+country_code,country_name,alpha2,demonym,emoji_flag,flag_url,fia_name,Numeric code,Latitude (average),Longitude (average),numeric_code,lat_avg,lon_avg
+ALA,Åland Islands,AX,,,,,,,,248,60.116667,19.9
+ASM,American Samoa,AS,,,,,,,,16,-14.3333,-170
+AND,Andorra,AD,,,,,,,,20,42.5,1.6
+AGO,Angola,AO,,,,,,,,24,-12.5,18.5
+AIA,Anguilla,AI,,,,,,,,660,18.25,-63.1667
+ATA,Antarctica,AQ,,,,,,,,10,-90,0
+ATG,Antigua and Barbuda,AG,,,,,,,,28,17.05,-61.8
+ABW,Aruba,AW,,,,,,,,533,12.5,-69.9667
+BGD,Bangladesh,BD,,,,,,,,50,24,90
+BRB,Barbados,BB,,,,,,,,52,13.1667,-59.5333
+BLZ,Belize,BZ,,,,,,,,84,17.25,-88.75
+BEN,Benin,BJ,,,,,,,,204,9.5,2.25
+BMU,Bermuda,BM,,,,,,,,60,32.3333,-64.75
+BTN,Bhutan,BT,,,,,,,,64,27.5,90.5
+BES,"Bonaire, Sint Eustatius and Saba",BQ,,,,,,,,535,12.183333,-68.233333
+BIH,Bosnia and Herzegovina,BA,,,,,,,,70,44,18
+BWA,Botswana,BW,,,,,,,,72,-22,24
+BVT,Bouvet Island,BV,,,,,,,,74,-54.4333,3.4
+IOT,British Indian Ocean Territory,IO,,,,,,,,86,-6,71.5
+BFA,Burkina Faso,BF,,,,,,,,854,13,-2
+BDI,Burundi,BI,,,,,,,,108,-3.5,30
+CMR,Cameroon,CM,,,,,,,,120,6,12
+CPV,Cape Verde,CV,,,,,,,,132,16,-24
+CYM,Cayman Islands,KY,,,,,,,,136,19.5,-80.5
+CAF,Central African Republic,CF,,,,,,,,140,7,21
+TCD,Chad,TD,,,,,,,,148,15,19
+CXR,Christmas Island,CX,,,,,,,,162,-10.5,105.6667
+COM,Comoros,KM,,,,,,,,174,-12.1667,44.25
+COD,"Congo, the Democratic Republic of the",CD,,,,,,,,180,0,25
+COK,Cook Islands,CK,,,,,,,,184,-21.2333,-159.7667
+CIV,Côte d'Ivoire,CI,,,,,,,,384,8,-5
+CUW,Curaçao,CW,,,,,,,,531,12.166667,-68.966667
+CYP,Cyprus,CY,,,,,,,,196,35,33
+DJI,Djibouti,DJ,,,,,,,,262,11.5,43
+DOM,Dominican Republic,DO,,,,,,,,214,19,-70.6667
+GNQ,Equatorial Guinea,GQ,,,,,,,,226,2,10
+ERI,Eritrea,ER,,,,,,,,232,15,39
+FLK,Falkland Islands (Malvinas),FK,,,,,,,,238,-51.75,-59
+FRO,Faroe Islands,FO,,,,,,,,234,62,-7
+FJI,Fiji,FJ,,,,,,,,242,-18,175
+GUF,French Guiana,GF,,,,,,,,254,4,-53
+PYF,French Polynesia,PF,,,,,,,,258,-15,-140
+ATF,French Southern Territories,TF,,,,,,,,260,-43,67
+GAB,Gabon,GA,,,,,,,,266,-1,11.75
+GMB,Gambia,GM,,,,,,,,270,13.4667,-16.5667
+GHA,Ghana,GH,,,,,,,,288,8,-2
+GIB,Gibraltar,GI,,,,,,,,292,36.1833,-5.3667
+CUB,Cuba,CU,Cuban,🇨🇺,,,,,,192,21.5,-80
+CCK,Cocos (Keeling) Islands,CC,,,,,,,,166,-12.5,96.8333
+ARG,Argentina,AR,Argentine,🇦🇷,,,,,,32,-34,-64
+ARM,Armenia,AM,Armenian,🇦🇲,,,,,,51,40,45
+AUS,Australia,AU,Australian,🇦🇺,,,,,,36,-27,133
+BRA,Brazil,BR,Brazilian,🇧🇷,,,,,,76,-10,-55
+KHM,Cambodia,KH,Cambodian,🇰🇭,,,,,,116,13,105
+CAN,Canada,CA,Canadian,🇨🇦,,,,,,124,60,-95
+CHL,Chile,CL,Chilean,🇨🇱,,,,,,152,-30,-71
+CHN,China,CN,Chinese,🇨🇳,,,,,,156,35,105
+COL,Colombia,CO,Colombian,🇨🇴,,,,,,170,4,-72
+CZE,Czech Republic,CZ,Czech,🇨🇿,,,,,,203,49.75,15.5
+DNK,Denmark,DK,Danish,🇩🇰,,,,,,208,56,10
+ECU,Ecuador,EC,Ecuadorian,🇪🇨,,,,,,218,-2,-77.5
+EGY,Egypt,EG,Egyptian,🇪🇬,,,,,,818,27,30
+EST,Estonia,EE,Estonian,🇪🇪,,,,,,233,59,26
+ETH,Ethiopia,ET,Ethiopian,🇪🇹,,,,,,231,8,38
+FIN,Finland,FI,Finnish,🇫🇮,,,,,,246,64,26
+FRA,France,FR,French,🇫🇷,,,,,,250,46,2
+DEU,Germany,DE,German,🇩🇪,,,,,,276,51,9
+DMA,Dominica,DM,,,,,,,,212,15.4167,-61.3333
+GRC,Greece,GR,Greek,🇬🇷,,,,,,300,39,22
+GRL,Greenland,GL,Greenlandic,🇬🇱,,,,,,304,72,-40
+AZE,Azerbaijan,AZ,Azerbaijani,🇦🇿,,,,,,31,40.5,47.5
+SLV,El Salvador,SV,Salvadoran,🇸🇻,,,,,,222,13.8333,-88.9167
+GEO,Georgia,GE,Georgian,🇬🇪,,,,,,268,42,43.5
+AUT,Austria,AT,Austrian,🇦🇹,,,,,,40,47.3333,13.3333
+CRI,Costa Rica,CR,Costa Rican,🇨🇷,,,,,,188,10,-84
+HRV,Croatia,HR,Croatian,🇭🇷,,,,,,191,45.1667,15.5
+COG,Congo,CG,Congolese,,,,,,,178,-1,15
+AFG,Afghanistan,AF,Afghani,🇦🇫,,,,,,4,33,65
+ALB,Albania,AL,Albanian,🇦🇱,,,,,,8,41,20
+DZA,Algeria,DZ,Algerian,🇩🇿,,,,,,12,28,3
+BHS,Bahamas,BS,Bahamian,🇧🇸,,,,,,44,24.25,-76
+BHR,Bahrain,BH,Bahraini,🇧🇭,,,,,,48,26,50.55
+BLR,Belarus,BY,Belarusian,🇧🇾,,,,,,112,53,28
+BEL,Belgium,BE,Belgian,🇧🇪,,,,,,56,50.8333,4
+BOL,Bolivia,BO,Bolivian,🇧🇴,,,,,,68,-17,-65
+GRD,Grenada,GD,,,,,,,,308,12.1167,-61.6667
+GLP,Guadeloupe,GP,,,,,,,,312,16.25,-61.5833
+GUM,Guam,GU,,,,,,,,316,13.4667,144.7833
+GGY,Guernsey,GG,,,,,,,,831,49.5,-2.56
+GNB,Guinea-Bissau,GW,,,,,,,,624,12,-15
+GIN,Guinea,GN,,,,,,,,324,11,-10
+GUY,Guyana,GY,,,,,,,,328,5,-59
+HMD,Heard Island and McDonald Islands,HM,,,,,,,,334,-53.1,72.5167
+VAT,Holy See (Vatican City State),VA,,,,,,,,336,41.9,12.45
+HKG,Hong Kong,HK,,,,,,,,344,22.25,114.1667
+IMN,Isle of Man,IM,,,,,,,,833,54.23,-4.55
+JEY,Jersey,JE,,,,,,,,832,49.21,-2.13
+KGZ,Kyrgyzstan,KG,,,,,,,,417,41,75
+LAO,Lao People's Democratic Republic,LA,,,,,,,,418,18,105
+LSO,Lesotho,LS,,,,,,,,426,-29.5,28.5
+LBR,Liberia,LR,,,,,,,,430,6.5,-9.5
+MAC,Macao,MO,,,,,,,,446,22.1667,113.55
+MWI,Malawi,MW,,,,,,,,454,-13.5,34
+MDV,Maldives,MV,,,,,,,,462,3.25,73
+MLI,Mali,ML,,,,,,,,466,17,-4
+MHL,Marshall Islands,MH,,,,,,,,584,9,168
+MTQ,Martinique,MQ,,,,,,,,474,14.6667,-61
+MRT,Mauritania,MR,,,,,,,,478,20,-12
+MUS,Mauritius,MU,,,,,,,,480,-20.2833,57.55
+MYT,Mayotte,YT,,,,,,,,175,-12.8333,45.1667
+FSM,"Micronesia, Federated States of",FM,,,,,,,,583,6.9167,158.25
+MSR,Montserrat,MS,,,,,,,,500,16.75,-62.2
+MOZ,Mozambique,MZ,,,,,,,,508,-18.25,35
+MMR,Myanmar,MM,,,,,,,,104,22,98
+NAM,Namibia,NA,,,,,,,,516,-22,17
+NRU,Nauru,NR,,,,,,,,520,-0.5333,166.9167
+ANT,Netherlands Antilles,AN,,,,,,,,530,12.25,-68.75
+NCL,New Caledonia,NC,,,,,,,,540,-21.5,165.5
+NIC,Nicaragua,NI,,,,,,,,558,13,-85
+NGA,Nigeria,NG,,,,,,,,566,10,8
+NIU,Niue,NU,,,,,,,,570,-19.0333,-169.8667
+NFK,Norfolk Island,NF,,,,,,,,574,-29.0333,167.95
+MNP,Northern Mariana Islands,MP,,,,,,,,580,15.2,145.75
+PLW,Palau,PW,,,,,,,,585,7.5,134.5
+PSE,"Palestinian Territory, Occupied",PS,,,,,,,,275,32,35.25
+PNG,Papua New Guinea,PG,,,,,,,,598,-6,147
+PRY,Paraguay,PY,,,,,,,,600,-23,-58
+PCN,Pitcairn,PN,,,,,,,,612,-24.7,-127.4
+PRI,Puerto Rico,PR,,,,,,,,630,18.25,-66.5
+REU,Réunion,RE,,,,,,,,638,-21.1,55.6
+RWA,Rwanda,RW,,,,,,,,646,-2,30
+BLM,Saint Barthélemy,BL,,,,,,,,652,17.897728,-62.834244
+SHN,"Saint Helena, Ascension and Tristan da Cunha",SH,,,,,,,,654,-15.9333,-5.7
+KNA,Saint Kitts and Nevis,KN,,,,,,,,659,17.3333,-62.75
+LCA,Saint Lucia,LC,,,,,,,,662,13.8833,-61.1333
+MAF,Saint Martin (French part),MF,,,,,,,,663,18.075278,-63.06
+SPM,Saint Pierre and Miquelon,PM,,,,,,,,666,46.8333,-56.3333
+SMR,San Marino,SM,,,,,,,,674,43.7667,12.4167
+STP,Sao Tome and Principe,ST,,,,,,,,678,1,7
+SEN,Senegal,SN,,,,,,,,686,14,-14
+SYC,Seychelles,SC,,,,,,,,690,-4.5833,55.6667
+SLE,Sierra Leone,SL,,,,,,,,694,8.5,-11.5
+HND,Honduras,HN,Honduran,🇭🇳,,,,,,340,15,-86.5
+HUN,Hungary,HU,Hungarian,🇭🇺,,,,,,348,47,20
+ISL,Iceland,IS,Icelandic,🇮🇸,,,,,,352,65,-18
+IND,India,IN,Indian,🇮🇳,,,,,,356,20,77
+IRL,Ireland,IE,Irish,🇮🇪,,,,,,372,53,-8
+IRN,"Iran, Islamic Republic of",IR,Iranian,,,,,,,364,32,53
+ISR,Israel,IL,Israeli,🇮🇱,,,,,,376,31.5,34.75
+ITA,Italy,IT,Italian,🇮🇹,,,,,,380,42.8333,12.8333
+JAM,Jamaica,JM,Jamaican,🇯🇲,,,,,,388,18.25,-77.5
+JPN,Japan,JP,Japanese,🇯🇵,,,,,,392,36,138
+LVA,Latvia,LV,Latvian,🇱🇻,,,,,,428,57,25
+ROU,Romania,RO,Romanian,🇷🇴,,,,,,642,46,25
+RUS,Russia,RU,Russian,🇷🇺,,,,,,643,60,100
+WSM,Samoa,WS,Samoan,🇼🇸,,,,,,882,-13.5833,-172.3333
+LTU,Lithuania,LT,Lithuanian,🇱🇹,,,,,,440,56,24
+KAZ,Kazakhstan,KZ,Kazakh,🇰🇿,,,,,,398,48,68
+PRK,"Korea, Democratic People's Republic of",KP,North Korean,,,,,,,408,40,127
+SRB,Serbia,RS,Serbian,🇷🇸,,,,,,688,44,21
+LBY,Libya,LY,Libyan,🇱🇾,,,,,,434,25,17
+LIE,Liechtenstein,LI,Liechtensteiner,🇱🇮,,,,,,438,47.1667,9.5333
+MEX,Mexico,MX,Mexican,🇲🇽,,,,,,484,23,-102
+NZL,New Zealand,NZ,New Zealander,🇳🇿,,,,,,554,-41,174
+MAR,Morocco,MA,Moroccan,🇲🇦,,,,,,504,32,-5
+NPL,Nepal,NP,Nepali,🇳🇵,,,,,,524,28,84
+NLD,Netherlands,NL,Dutch,🇳🇱,,,,,,528,52.5,5.75
+OMN,Oman,OM,Omani,🇴🇲,,,,,,512,21,57
+NOR,Norway,NO,Norwegian,🇳🇴,,,,,,578,62,10
+NER,Niger,NE,,,,,,,,562,16,8
+KIR,Kiribati,KI,Kiribati,🇰🇮,,,,,,296,1.4167,173
+MLT,Malta,MT,Maltese,🇲🇹,,,,,,470,35.8333,14.5833
+LUX,Luxembourg,LU,Luxembourgish,🇱🇺,,,,,,442,49.75,6.1667
+MYS,Malaysia,MY,Malaysian,🇲🇾,,,,,,458,2.5,112.5
+PAK,Pakistan,PK,Pakistani,🇵🇰,,,,,,586,30,70
+PER,Peru,PE,Peruvian,🇵🇪,,,,,,604,-10,-76
+PHL,Philippines,PH,Filipino,🇵🇭,,,,,,608,13,122
+POL,Poland,PL,Polish,🇵🇱,,,,,,616,52,20
+MDG,Madagascar,MG,Malagasy,🇲🇬,,,,,,450,-20,47
+MNE,Montenegro,ME,Montenegrin,🇲🇪,,,,,,499,42,19
+PAN,Panama,PA,Panamanian,,,,,,,591,9,-80
+JOR,Jordan,JO,Jordanian,🇯🇴,,,,,,400,31,36
+HTI,Haiti,HT,Haitian,🇭🇹,,,,,,332,19,-72.4167
+SXM,Sint Maarten (Dutch part),SX,,,,,,,,534,18.033333,-63.05
+SLB,Solomon Islands,SB,,,,,,,,90,-8,159
+SGS,South Georgia and the South Sandwich Islands,GS,,,,,,,,239,-54.5,-37
+LKA,Sri Lanka,LK,,,,,,,,144,7,81
+VCT,St. Vincent and the Grenadines,VC,,,,,,,,670,13.25,-61.2
+SUR,Suriname,SR,,,,,,,,740,4,-56
+SJM,Svalbard and Jan Mayen,SJ,,,,,,,,744,78,20
+SWZ,Swaziland,SZ,,,,,,,,748,-26.5,31.5
+TJK,Tajikistan,TJ,,,,,,,,762,39,71
+TZA,"Tanzania, United Republic of",TZ,,,,,,,,834,-6,35
+TLS,Timor-Leste,TL,,,,,,,,626,-8.55,125.5167
+TGO,Togo,TG,,,,,,,,768,8,1.1667
+TKL,Tokelau,TK,,,,,,,,772,-9,-172
+TON,Tonga,TO,,,,,,,,776,-20,-175
+TTO,Trinidad and Tobago,TT,,,,,,,,780,11,-61
+TKM,Turkmenistan,TM,,,,,,,,795,40,60
+TCA,Turks and Caicos Islands,TC,,,,,,,,796,21.75,-71.5833
+TUV,Tuvalu,TV,,,,,,,,798,-8,178
+UGA,Uganda,UG,,,,,,,,800,1,32
+UMI,United States Minor Outlying Islands,UM,,,,,,,,581,19.2833,166.6
+URY,Uruguay,UY,,,,,,,,858,-33,-56
+UZB,Uzbekistan,UZ,,,,,,,,860,41,64
+VUT,Vanuatu,VU,,,,,,,,548,-16,167
+VGB,"Virgin Islands, British",VG,,,,,,,,92,18.5,-64.5
+VIR,"Virgin Islands, U.S.",VI,,,,,,,,850,18.3333,-64.8333
+WLF,Wallis and Futuna,WF,,,,,,,,876,-13.3,-176.2
+ESH,Western Sahara,EH,,,,,,,,732,24.5,-13
+ZMB,Zambia,ZM,,,,,,,,894,-15,30
+ZWE,Zimbabwe,ZW,,,,,,,,716,-20,30
+ARE,United Arab Emirates,AE,Emirati,🇦🇪,,,,,,784,24,54
+KEN,Kenya,KE,Kenyan,🇰🇪,,,,,,404,1,38
+SGP,Singapore,SG,Singaporean,🇸🇬,,,,,,702,1.3667,103.8
+SDN,Sudan,SD,Sudanese,,,,,,,736,15,30
+BGR,Bulgaria,BG,Bulgarian,🇧🇬,,,,,,100,43,25
+GTM,Guatemala,GT,Guatemalan,🇬🇹,,,,,,320,15.5,-90.25
+IDN,Indonesia,ID,Indonesian,🇮🇩,,,,,,360,-5,120
+IRQ,Iraq,IQ,Iraqi,🇮🇶,,,,,,368,33,44
+XKX,Kosovo,XK,Kosovar,🇽🇰,,,,,,95,42.583333,21
+KWT,Kuwait,KW,Kuwaiti,🇰🇼,,,,,,414,29.3375,47.6581
+LBN,Lebanon,LB,Lebanese,🇱🇧,,,,,,422,33.8333,35.8333
+SOM,Somalia,SO,Somali,,,,,,,706,10,49
+MDA,"Moldova, Republic of",MD,Moldovan,🇲🇩,,,,,,498,47,29
+MCO,Monaco,MC,Monegasque,🇲🇨,,,,,,492,43.7333,7.4
+MNG,Mongolia,MN,Mongolian,🇲🇳,,,,,,496,46,105
+PRT,Portugal,PT,Portuguese,🇵🇹,,,,,,620,39.5,-8
+QAT,Qatar,QA,Qatari,🇶🇦,,,,,,634,25.5,51.25
+SVK,Slovakia,SK,Slovak,🇸🇰,,,,,,703,48.6667,19.5
+SVN,Slovenia,SI,Slovenian,🇸🇮,,,,,,705,46,15
+ZAF,South Africa,ZA,South African,🇿🇦,,,,,,710,-29,24
+SSD,South Sudan,SS,South Sudanese,🇸🇸,,,,,,728,8,30
+ESP,Spain,ES,Spanish,🇪🇸,,,,,,724,40,-4
+SWE,Sweden,SE,Swedish,🇸🇪,,,,,,752,62,15
+CHE,Switzerland,CH,Swiss,🇨🇭,,,,,,756,47,8
+SYR,Syrian Arab Republic,SY,Syrian,🇸🇾,,,,,,760,35,38
+TWN,Taiwan,TW,Taiwanese,🇹🇼,,,,,,158,23.5,121
+THA,Thailand,TH,Thai,🇹🇭,,,,,,764,15,100
+TUN,Tunisia,TN,Tunisian,🇹🇳,,,,,,788,34,9
+TUR,Turkey,TR,Turkish,🇹🇷,,,,,,792,39,35
+UKR,Ukraine,UA,Ukrainian,🇺🇦,,,,,,804,49,32
+GBR,United Kingdom,GB,British,🇬🇧,,,,,,826,54,-2
+USA,United States,US,American,🇺🇸,,,,,,840,38,-97
+VEN,Venezuela,VE,Venezuelan,🇻🇪,,,,,,862,8,-66
+VNM,Vietnam,VN,Vietnamese,🇻🇳,,,,,,704,16,106
+YEM,Yemen,YE,Yemeni,🇾🇪,,,,,,887,15,48
+MKD,"Macedonia, the former Yugoslav Republic of",MK,Macedonan,,,,,,,807,41.8333,22
+SAU,Saudi Arabia,SA,Saudi Arabian,🇸🇦,,,,,,682,25,45
+KOR,South Korea,KR,South Korea,🇰🇷,,,,,,410,37,127.5

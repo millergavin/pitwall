@@ -1,0 +1,8 @@
+alias,driver_id,alias_type,created_at
+Andrea,drv:antonelli-k-2006,first_name,2025-08-28 01:39:21.472465+00
+Kimi,drv:antonelli-k-2006,first_name,2025-08-28 01:39:21.472465+00
+Andrea Kimi,drv:antonelli-k-2006,first_name,2025-08-28 01:39:21.472465+00
+Antonelli,drv:antonelli-k-2006,last_name,2025-08-28 01:39:21.472465+00
+Andrea Antonelli,drv:antonelli-k-2006,full_name,2025-08-28 01:39:21.472465+00
+Kimi Antonelli,drv:antonelli-k-2006,full_name,2025-08-28 01:39:21.472465+00
+Andrea Kimi Antonelli,drv:antonelli-k-2006,full_name,2025-08-28 01:39:21.472465+00
