@@ -48,7 +48,7 @@ button {
   margin: 0;
   padding: 0;
   border: none;
-  background: none;
+  background-color: transparent;
   font: inherit;
   color: inherit;
   cursor: pointer;

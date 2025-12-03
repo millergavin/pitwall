@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { GlobalHeader } from './GlobalHeader';
 import { useStore } from '../store/useStore';
 
@@ -10,6 +10,11 @@ interface PageLayoutProps {
 
 export const PageLayout = ({ children, pageTitle, sidebar }: PageLayoutProps) => {
   const { sidebarOpen, sidebarWidth } = useStore();
+
+  // Update document title when pageTitle changes
+  useEffect(() => {
+    document.title = pageTitle ? `${pageTitle} / PITWALL` : 'PITWALL';
+  }, [pageTitle]);
 
   return (
     <div className="h-screen bg-0 flex flex-col">
