@@ -36,11 +36,13 @@ interface ClassificationData {
   driver_name: string;
   name_acronym: string;
   team_name: string;
+  grid_position: number | null;
   finish_position: number | null;
   duration_ms: number | null;
   gap_to_leader_ms: number | null;
   fastest_lap: boolean | null;
   status: string;
+  points: number | null;
 }
 
 interface StandingsData {
@@ -109,7 +111,7 @@ export const Dashboard = () => {
             .sort((a: ClassificationData, b: ClassificationData) => 
               (a.finish_position || 999) - (b.finish_position || 999)
             )
-            .slice(0, 3);
+            .slice(0, 10); // Top 10 instead of 3
           
           setTopFinishers(sortedResults);
           
@@ -180,15 +182,15 @@ export const Dashboard = () => {
     return `+${totalSeconds.toFixed(3)}s`;
   };
 
-  // Get top 5 drivers with their last 5 rounds
-  const getTop5DriversWithSparkline = () => {
+  // Get top 10 drivers with their last 5 rounds
+  const getTop10DriversWithSparkline = () => {
     if (!driverStandings.length) return [];
     
     const latestRound = Math.max(...driverStandings.map(d => d.round_number));
     const latestStandings = driverStandings
       .filter(d => d.round_number === latestRound)
       .sort((a, b) => b.cumulative_points - a.cumulative_points)
-      .slice(0, 5);
+      .slice(0, 10);
     
     const leaderPoints = latestStandings[0]?.cumulative_points || 0;
     
@@ -206,15 +208,15 @@ export const Dashboard = () => {
     });
   };
 
-  // Get top 5 constructors with their last 5 rounds
-  const getTop5ConstructorsWithSparkline = () => {
+  // Get top 10 constructors with their last 5 rounds
+  const getTop10ConstructorsWithSparkline = () => {
     if (!constructorStandings.length) return [];
     
     const latestRound = Math.max(...constructorStandings.map(d => d.round_number));
     const latestStandings = constructorStandings
       .filter(d => d.round_number === latestRound)
       .sort((a, b) => b.cumulative_points - a.cumulative_points)
-      .slice(0, 5);
+      .slice(0, 10);
     
     const leaderPoints = latestStandings[0]?.cumulative_points || 0;
     
@@ -287,130 +289,150 @@ export const Dashboard = () => {
     );
   }
 
-  const top5Drivers = getTop5DriversWithSparkline();
-  const top5Constructors = getTop5ConstructorsWithSparkline();
+  const top10Drivers = getTop10DriversWithSparkline();
+  const top10Constructors = getTop10ConstructorsWithSparkline();
 
   return (
     <PageLayout pageTitle="Dashboard" sidebar={<NavSidebar />}>
-      <div className="flex flex-col h-full gap-6">
-        {/* Latest Meeting */}
-        {latestMeeting && (
-          <div>
-            <h2 className="text-zinc-400 text-sm f1-display-regular mb-3 uppercase tracking-wide">
-              Latest Grand Prix
-            </h2>
-            <div
-              onClick={() => navigate(`/grand-prix/${latestMeeting.meeting_id}`)}
-              className="relative overflow-hidden rounded-corner cursor-pointer group transition-transform hover:scale-[1.01] active:scale-[0.99] bg-black"
-              style={{ height: '320px' }}
-            >
-              {/* Cover image */}
-              {coverImageUrl ? (
-                <div className="absolute inset-0">
-                  <img
-                    src={coverImageUrl}
-                    alt={latestMeeting.circuit_name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 80%, rgba(0,0,0,0.1) 100%)',
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="absolute inset-0 bg-black" />
-              )}
-
-              {/* Content */}
-              <div className="relative h-full flex flex-col justify-between p-6">
-                {/* Top section */}
-                <div className="flex justify-between items-start">
-                  <div className="bg-f1-red text-white px-3 py-1 rounded text-sm f1-display-bold">
-                    ROUND {latestMeeting.round_number}
+      <div className="flex flex-col h-240">
+        {/* Championship Snapshots - 3 equal columns */}
+        <div className="grid grid-cols-3 gap-6 flex-1 min-h-0">
+          {/* Latest Meeting - Column 1 */}
+          {latestMeeting && (
+            <div className="flex flex-col h-full">
+              <div
+                onClick={() => navigate(`/grand-prix/${latestMeeting.meeting_id}`)}
+                className="relative overflow-hidden rounded-corner cursor-pointer group transition-transform hover:scale-[1.01] active:scale-[0.99] bg-black h-full flex flex-col"
+              >
+                {/* Cover image */}
+                {coverImageUrl ? (
+                  <div className="absolute inset-0">
+                    <img
+                      src={coverImageUrl}
+                      alt={latestMeeting.circuit_name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 80%, rgba(0,0,0,0.1) 100%)',
+                      }}
+                    />
                   </div>
-                  {latestMeeting.flag_url && (
-                    <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg">
-                      <img
-                        src={latestMeeting.flag_url}
-                        alt={latestMeeting.country_name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                </div>
+                ) : (
+                  <div className="absolute inset-0 bg-black" />
+                )}
 
-                {/* Bottom section */}
-                <div className="z-10">
-                  <div className="text-zinc-300 text-sm f1-display-regular mb-2">
-                    {formatDate(latestMeeting.date_start)} - {formatDate(latestMeeting.date_end)}
+                {/* Content */}
+                <div className="relative h-full flex flex-col justify-between p-6">
+                  {/* Top section */}
+                  <div className="flex justify-between items-start">
+                    <div className="bg-f1-red text-white px-3 py-1 rounded text-sm f1-display-bold">
+                      LATEST GRAND PRIX
+                    </div>
+                    {latestMeeting.flag_url && (
+                      <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg">
+                        <img
+                          src={latestMeeting.flag_url}
+                          alt={latestMeeting.country_name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
                   </div>
-                  <h2
-                    className="text-white f1-display-bold text-4xl leading-tight uppercase mb-3"
-                    style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)' }}
-                  >
-                    {latestMeeting.season} {latestMeeting.meeting_short_name}
-                  </h2>
 
-                  {/* Race Results Summary */}
-                  {topFinishers.length > 0 && (
-                    <div className="bg-black/60 backdrop-blur-sm rounded-lg p-4 space-y-2">
-                      {topFinishers.map((finisher, idx) => (
-                        <div key={finisher.driver_id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="text-white f1-display-bold text-lg w-6">
-                              {idx + 1}
-                            </div>
-                            <div>
-                              <div className="text-white f1-display-bold text-base">
-                                {finisher.driver_name}
-                              </div>
-                              <div className="text-zinc-400 text-xs f1-display-regular">
-                                {finisher.team_name}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-white f1-display-regular text-sm">
-                              {idx === 0 ? formatDuration(finisher.duration_ms) : formatGap(finisher.gap_to_leader_ms)}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {/* Fastest Lap Chip */}
-                      {fastestLapDriver && (
-                        <div className="pt-2 mt-2 border-t border-zinc-700">
-                          <div className="inline-flex items-center gap-2 bg-purple-600 text-white px-3 py-1 rounded text-xs f1-display-bold">
-                            <FontAwesomeIcon icon={faStopwatch} />
-                            <span>{fastestLapDriver}</span>
-                          </div>
-                        </div>
-                      )}
+                  {/* Bottom section */}
+                  <div className="z-10 flex-1 flex flex-col justify-end overflow-auto">
+                    <div className="text-zinc-300 text-sm f1-display-regular mb-2">
+                      {formatDate(latestMeeting.date_start)} - {formatDate(latestMeeting.date_end)}
                     </div>
-                  )}
+                    <h2
+                      className="text-white f1-display-bold text-3xl leading-tight uppercase mb-3"
+                      style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)' }}
+                    >
+                      {latestMeeting.season} {latestMeeting.meeting_short_name}
+                    </h2>
+
+                    {/* Race Results Summary */}
+                    {topFinishers.length > 0 && (
+                      <div className="bg-black/60 backdrop-blur-sm rounded-lg p-6 space-y-8 max-h-[80%] overflow-auto">
+                        {topFinishers.map((finisher, idx) => {
+                          const positionChange = finisher.grid_position && finisher.finish_position
+                            ? finisher.grid_position - finisher.finish_position
+                            : null;
+                          const isFastestLap = finisher.driver_name === fastestLapDriver;
+                          
+                          return (
+                            <div key={finisher.driver_id} className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3 flex-shrink-0 min-w-0" style={{ maxWidth: '50%' }}>
+                                <div className="text-white f1-display-bold text-base w-8 flex-shrink-0">
+                                  {idx + 1}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-white f1-display-bold text-sm truncate">
+                                    {finisher.driver_name}
+                                  </div>
+                                  <div className="text-zinc-400 text-[10px] f1-display-regular truncate">
+                                    {finisher.team_name}
+                                  </div>
+                                </div>
+                                {isFastestLap && (
+                                  <div className="w-5 h-5 bg-purple-600 rounded flex items-center justify-center flex-shrink-0 ml-1">
+                                    <FontAwesomeIcon icon={faStopwatch} className="text-white text-[10px]" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 flex-shrink-0">
+                                {/* Grid position and change */}
+                                {finisher.grid_position && (
+                                  <div className="text-center min-w-[48px]">
+                                    <div className="text-zinc-400 text-[10px] f1-display-regular">
+                                      P{finisher.grid_position}
+                                    </div>
+                                    {positionChange !== null && positionChange !== 0 && (
+                                      <div className={`text-[10px] f1-display-bold ${positionChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {positionChange > 0 ? `+${positionChange}` : positionChange}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {/* Time */}
+                                <div className="text-right min-w-24">
+                                  <div className="text-white f1-display-regular text-xs">
+                                    {idx === 0 ? formatDuration(finisher.duration_ms) : formatGap(finisher.gap_to_leader_ms)}
+                                  </div>
+                                </div>
+                                {/* Points */}
+                                {finisher.points !== null && finisher.points > 0 && (
+                                  <div className="text-white f1-display-regular text-xs min-w-16 text-right">
+                                    +{finisher.points}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Hover effect */}
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none" />
               </div>
-
-              {/* Hover effect */}
-              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none" />
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Championship Snapshots */}
-        <div className="grid grid-cols-2 gap-6">
-          {/* Driver Championship */}
+          {/* Driver Championship - Column 2 */}
           <div 
             onClick={() => navigate('/championship')}
-            className="bg-black rounded-corner p-6 cursor-pointer hover:bg-zinc-900 transition-colors"
+            className="bg-black rounded-corner p-6 cursor-pointer hover:bg-zinc-900 transition-colors flex flex-col h-full"
           >
             <h2 className="text-white f1-display-bold text-xl mb-4">
               Driver Championship
             </h2>
-            <div className="space-y-3">
-              {top5Drivers.map((driver, idx) => (
+            <div className="space-y-3 overflow-auto flex-1">
+              {top10Drivers.map((driver, idx) => (
                 <div
                   key={driver.driver_id}
                   className="flex items-center justify-between p-3 rounded"
@@ -440,16 +462,16 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          {/* Constructor Championship */}
+          {/* Constructor Championship - Column 3 */}
           <div 
             onClick={() => navigate('/championship')}
-            className="bg-black rounded-corner p-6 cursor-pointer hover:bg-zinc-900 transition-colors"
+            className="bg-black rounded-corner p-6 cursor-pointer hover:bg-zinc-900 transition-colors flex flex-col h-full"
           >
             <h2 className="text-white f1-display-bold text-xl mb-4">
               Constructor Championship
             </h2>
-            <div className="space-y-3">
-              {top5Constructors.map((team, idx) => (
+            <div className="space-y-3 overflow-auto flex-1">
+              {top10Constructors.map((team, idx) => (
                 <div
                   key={team.team_id}
                   className="flex items-center justify-between p-3 rounded"

@@ -2,8 +2,8 @@ import { NavMenuItem } from './NavMenuItem';
 
 export const NavSidebar = () => {
   return (
-    <div className="p-2 pt-6">
-      <nav className="space-y-1">
+    <div className="p-4 pt-6">
+      <nav className="space-y-0">
         <NavMenuItem to="/">Dashboard</NavMenuItem>
         <NavMenuItem to="/championship">Championship</NavMenuItem>
         <NavMenuItem to="/circuits">Circuits</NavMenuItem>

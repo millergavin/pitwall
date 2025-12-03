@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { IconButton } from './IconButton';
-import { ApiStatusIndicator } from './ApiStatusIndicator';
 import { DatabaseUpdateIndicator } from './DatabaseUpdateIndicator';
-import { faBars, faDatabase, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faDatabase } from '@fortawesome/free-solid-svg-icons';
 
 interface GlobalHeaderProps {
   pageTitle?: string;
@@ -51,7 +50,7 @@ export const GlobalHeader = ({ pageTitle = 'Page Title' }: GlobalHeaderProps) =>
         <h1 className="page-title">{pageTitle}</h1>
       </div>
 
-      {/* Right: Action buttons + API status */}
+      {/* Right: Action buttons */}
       <div className="flex items-center gap-2 px-6">
         <DatabaseUpdateIndicator />
         <Link to="/admin" title="Database Admin">
@@ -62,13 +61,6 @@ export const GlobalHeader = ({ pageTitle = 'Page Title' }: GlobalHeaderProps) =>
             aria-label="Database Admin"
           />
         </Link>
-        <IconButton
-          size="md"
-          variant="text"
-          icon={faUser}
-          aria-label="User menu"
-        />
-        <ApiStatusIndicator status="connected" />
       </div>
     </header>
   );
