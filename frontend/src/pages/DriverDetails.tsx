@@ -149,9 +149,9 @@ export const DriverDetails = () => {
       pageTitle={driver.full_name}
       sidebar={<NavSidebar />}
     >
-      <div className="flex flex-col h-full gap-6 overflow-y-auto">
-        {/* Back button and season selector */}
-        <div className="flex items-center justify-between flex-shrink-0">
+      <div className="flex flex-col h-full overflow-hidden">
+        {/* Back button and season selector - Fixed at top */}
+        <div className="flex items-center justify-between flex-shrink-0 mb-6">
           <Button 
             variant="text" 
             size="sm"
@@ -174,11 +174,13 @@ export const DriverDetails = () => {
           </select>
         </div>
 
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto space-y-6">
         {/* Hero Section */}
         <div 
           className="relative rounded-corner overflow-hidden"
           style={{ 
-            height: '280px',
+            height: '224px',
             background: `linear-gradient(135deg, #${driver.color_hex}20 0%, #${driver.color_hex}40 100%)`,
           }}
         >
@@ -192,11 +194,14 @@ export const DriverDetails = () => {
             <div className="flex items-end gap-6 w-full">
               {/* Driver headshot */}
               {headshotUrl && (
-                <div className="w-48 h-48 rounded-corner overflow-hidden bg-zinc-900 flex-shrink-0">
+                <div 
+                  className="w-48 h-48 rounded-corner overflow-hidden flex-shrink-0"
+                  style={{ backgroundColor: `#${driver.color_hex}` }}
+                >
                   <img
                     src={headshotUrl}
                     alt={driver.full_name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 </div>
               )}
@@ -401,6 +406,7 @@ export const DriverDetails = () => {
               })}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </PageLayout>

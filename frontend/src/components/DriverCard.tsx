@@ -100,8 +100,7 @@ export const DriverCard = ({ driver, onClick }: DriverCardProps) => {
               <img
                 src={driver.team_logo_url}
                 alt={`${driver.team_name} logo`}
-                className="w-6 h-6 object-contain opacity-90"
-                style={{ filter: 'brightness(0) invert(1)' }} // Make logo white
+                className="w-6 h-6 object-contain"
               />
             </div>
           )}
