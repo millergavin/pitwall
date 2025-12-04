@@ -156,3 +156,4 @@ export const Changelog = ({ isOpen, onClose }: ChangelogProps) => {
   );
 };
 
+

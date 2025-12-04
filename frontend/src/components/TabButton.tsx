@@ -1,49 +1,53 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 type TabButtonSize = 'sm' | 'md' | 'lg';
+type TabButtonVariant = 'default' | 'ghost';
 
 interface TabButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: TabButtonSize;
+  variant?: TabButtonVariant;
   active?: boolean;
   children: ReactNode;
 }
 
 export const TabButton = ({
   size = 'md',
+  variant = 'default',
   active = false,
   children,
   className = '',
   disabled,
   ...props
 }: TabButtonProps) => {
-  // Size-based classes with inline padding override
-  const sizeStyles = {
-    sm: { paddingLeft: '8px', paddingRight: '8px', paddingTop: '4px', paddingBottom: '4px' },
-    md: { paddingLeft: '12px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px' },
-    lg: { paddingLeft: '16px', paddingRight: '16px', paddingTop: '10px', paddingBottom: '10px' },
+  const sizeClasses = {
+    sm: 'px-2 py-1 button-sm',
+    md: 'px-3 py-2 button-md',
+    lg: 'px-4 py-2.5 button-lg',
   };
 
-  const textSizeClasses = {
-    sm: 'button-sm',
-    md: 'button-md',
-    lg: 'button-lg',
+  // Active/inactive state classes based on variant
+  const getStateClasses = () => {
+    if (variant === 'ghost') {
+      return active
+        ? 'bg-black text-white border border-zinc-800'
+        : 'bg-transparent text-zinc-700 hover:bg-zinc-900 hover:text-zinc-200';
+    }
+    
+    // Default variant
+    return active
+      ? 'bg-f1-red text-white hover:bg-[#981b1b]'
+      : 'bg-transparent text-zinc-500 hover:bg-zinc-900 hover:text-white';
   };
 
-  // Active/inactive state classes
-  const stateClasses = active
-    ? 'bg-f1-red text-white hover:bg-[#981b1b]'
-    : 'bg-zinc-950 border border-zinc-900 hover:bg-zinc-900 hover:text-white';
-  
-  // Inactive text color via inline style (more reliable than Tailwind class)
-  const textColorStyle = !active ? { color: '#71717a' } : undefined;
+  const stateClasses = getStateClasses();
 
   const baseClasses = `
     inline-flex items-center justify-center gap-2
     rounded-corner
     transition-colors duration-150
-    disabled:opacity-50 disabled:cursor-not-allowed
+    disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-0
-    ${textSizeClasses[size]}
+    ${sizeClasses[size]}
     ${stateClasses}
     ${className}
   `.trim().replace(/\s+/g, ' ');
@@ -51,7 +55,6 @@ export const TabButton = ({
   return (
     <button
       className={baseClasses}
-      style={{ ...sizeStyles[size], ...textColorStyle }}
       disabled={disabled}
       {...props}
     >

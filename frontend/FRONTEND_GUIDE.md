@@ -1,5 +1,7 @@
 # Frontend Development Guide
 
+> **⚠️ Tailwind utility classes not working?** See [TAILWIND_TROUBLESHOOTING.md](./TAILWIND_TROUBLESHOOTING.md)
+
 ## Tailwind CSS v4 - Important Patterns
 
 We're using **Tailwind CSS v4** with the `@tailwindcss/postcss` plugin. This version has different syntax than v3 that you need to follow.

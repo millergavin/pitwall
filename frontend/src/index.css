@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+@theme {
+  /* Custom project colors */
+  --color-bg-0: #0F0F0F;
+  --color-bg-1: #000000;
+  --color-f1-red: #E10600;
+  --color-f1-bright-red: #FF1E00;
+  
+  /* Overlay colors with opacity */
+  --color-overlay-50: rgb(255 255 255 / 0.05);
+  --color-overlay-100: rgb(255 255 255 / 0.10);
+  --color-overlay-200: rgb(255 255 255 / 0.20);
+  --color-overlay-300: rgb(255 255 255 / 0.30);
+  --color-overlay-400: rgb(255 255 255 / 0.40);
+  --color-overlay-500: rgb(255 255 255 / 0.50);
+  --color-overlay-600: rgb(255 255 255 / 0.60);
+  --color-overlay-700: rgb(255 255 255 / 0.70);
+  --color-overlay-800: rgb(255 255 255 / 0.80);
+  --color-overlay-900: rgb(255 255 255 / 0.90);
+  --color-overlay-950: rgb(255 255 255 / 0.95);
+  
+  /* Border radius */
+  --radius-corner: 6px;
+  
+  /* Fonts */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", Monaco, Inconsolata, "Roboto Mono", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+}
+
 /* Base font size: 14px (dense, technical feel) */
 :root {
   font-size: 14px; /* Base REM = 14px instead of 16px */
@@ -43,24 +71,7 @@ body {
   color: #ffffff;
 }
 
-/* Reset button styles to remove default browser styling */
-button {
-  margin: 0;
-  padding: 0;
-  border: none;
-  background-color: transparent;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  outline: none;
-}
-
-button:focus {
-  outline: none;
-}
+/* Button reset is handled by Tailwind's base layer */
 
 /* Utility classes for colors */
 .bg-0 {
@@ -186,25 +197,25 @@ button:focus {
 .button-sm {
   font-size: 12px;
   line-height: 16px;
-  font-weight: 500; /* Medium */
+  font-weight: 700; /* Medium */
   text-transform: uppercase;
-  letter-spacing: 0.12px;
+  letter-spacing: 0.3px;
 }
 
 .button-md {
   font-size: 14px;
   line-height: 16px;
-  font-weight: 500; /* Medium */
+  font-weight: 700; /* Medium */
   text-transform: uppercase;
-  letter-spacing: 0.14px;
+  letter-spacing: 0.5px;
 }
 
 .button-lg {
   font-size: 16px;
   line-height: 20px;
-  font-weight: 500; /* Medium */
+  font-weight: 700; /* Medium */
   text-transform: uppercase;
-  letter-spacing: 0.16px;
+  letter-spacing: 0.7px;
 }
 
 /* Page title semantic style */

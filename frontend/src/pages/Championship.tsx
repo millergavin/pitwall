@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PageLayout } from '../components/PageLayout';
 import { NavSidebar } from '../components/NavSidebar';
 import { ChampionshipStandingsChart } from '../components/ChampionshipStandingsChart';
@@ -9,7 +10,9 @@ import { api } from '../api/client';
 type StandingsType = 'drivers' | 'constructors';
 
 export const Championship = () => {
-  const [standingsType, setStandingsType] = useState<StandingsType>('drivers');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialType = (searchParams.get('type') as StandingsType) || 'drivers';
+  const [standingsType, setStandingsType] = useState<StandingsType>(initialType);
   const [season, setSeason] = useState(2025); // Default to current season
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +62,12 @@ export const Championship = () => {
     setSelectedEntityIds(new Set());
   };
 
+  // Update URL when tab changes
+  const handleSetStandingsType = (type: StandingsType) => {
+    setStandingsType(type);
+    setSearchParams({ type });
+  };
+
   // Generate available seasons (2023-2025 for now)
   const availableSeasons = [2023, 2024, 2025];
 
@@ -71,14 +80,14 @@ export const Championship = () => {
             <TabButton
               size="md"
               active={standingsType === 'drivers'}
-              onClick={() => setStandingsType('drivers')}
+              onClick={() => handleSetStandingsType('drivers')}
             >
               Drivers
             </TabButton>
             <TabButton
               size="md"
               active={standingsType === 'constructors'}
-              onClick={() => setStandingsType('constructors')}
+              onClick={() => handleSetStandingsType('constructors')}
             >
               Constructors
             </TabButton>

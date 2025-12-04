@@ -4,7 +4,7 @@ import { useStore } from '../store/useStore';
 import { IconButton } from './IconButton';
 import { DatabaseUpdateIndicator } from './DatabaseUpdateIndicator';
 import { Changelog } from './Changelog';
-import { faBars, faDatabase, faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faDatabase, faClockRotateLeft, faShapes } from '@fortawesome/free-solid-svg-icons';
 
 interface GlobalHeaderProps {
   pageTitle?: string;
@@ -64,6 +64,14 @@ export const GlobalHeader = ({ pageTitle = 'Page Title' }: GlobalHeaderProps) =>
           aria-label="Changelog"
           title="Changelog"
         />
+        <Link to="/playground" title="Design System Playground">
+          <IconButton
+            size="md"
+            variant="text"
+            icon={faShapes}
+            aria-label="Design System Playground"
+          />
+        </Link>
         <Link to="/admin" title="Database Admin">
           <IconButton
             size="md"

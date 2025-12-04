@@ -259,7 +259,10 @@ export const DriverDetails = () => {
 
         {/* Season Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4">
-          <div className="bg-black rounded-corner p-6">
+          <div 
+            onClick={() => navigate('/championship')}
+            className="bg-black rounded-corner p-6 cursor-pointer hover:bg-zinc-900 transition-colors"
+          >
             <div className="flex items-center gap-2 mb-2">
               <FontAwesomeIcon icon={faTrophy} className="text-yellow-400 text-sm" />
               <div className="text-zinc-400 text-sm f1-display-regular">Points</div>
@@ -370,7 +373,10 @@ export const DriverDetails = () => {
           </div>
 
           {/* Season Progression Chart */}
-          <div className="bg-black rounded-corner p-4 lg:p-6">
+          <div 
+            onClick={() => navigate('/championship')}
+            className="bg-black rounded-corner p-4 lg:p-6 cursor-pointer hover:bg-zinc-900 transition-colors"
+          >
             <h2 className="text-white f1-display-bold text-lg lg:text-xl mb-3 lg:mb-4">Season Progression</h2>
             <div className="space-y-1 lg:space-y-2">
               {season_progression.map((round) => {

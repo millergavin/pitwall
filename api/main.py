@@ -329,9 +329,13 @@ def get_session_classification(session_id: str):
                     sc.team_id, sc.team_name, sc.display_name, sc.color_hex, sc.grid_position,
                     sc.finish_position, sc.status::text as status, sc.laps_completed, 
                     sc.duration_ms, sc.gap_to_leader_ms, sc.best_lap_ms, sc.fastest_lap, sc.points,
-                    dt.logo_url
+                    sc.quali_lap_ms,
+                    dt.logo_url,
+                    dd.headshot_url,
+                    dd.headshot_override
                 FROM gold.session_classification sc
                 LEFT JOIN gold.dim_teams dt ON sc.team_id = dt.team_id AND sc.season = dt.season
+                LEFT JOIN gold.dim_drivers dd ON sc.driver_id = dd.driver_id AND sc.season = dd.season
                 WHERE sc.session_id = %s
                 ORDER BY sc.finish_position NULLS LAST, sc.driver_name
             """, (session_id,))

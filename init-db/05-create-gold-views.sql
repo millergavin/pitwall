@@ -201,6 +201,7 @@ SELECT
     r.duration_ms,
     r.gap_to_leader_ms,
     r.best_lap_ms,
+    r.quali_lap_ms,
     r.fastest_lap,
     r.points
 FROM silver.results r
@@ -210,7 +211,7 @@ INNER JOIN silver.circuits c ON m.circuit_id = c.circuit_id
 INNER JOIN silver.driver_id_by_session dis 
     ON s.session_id = dis.session_id 
     AND r.driver_id = dis.driver_id
-WHERE s.session_type IN ('race', 'sprint', 'quali', 'sprint_quali')
+WHERE s.session_type IN ('race', 'sprint', 'quali', 'sprint_quali', 'p1', 'p2', 'p3')
   AND r.status != 'dns'
 ORDER BY 
     m.season,
@@ -554,6 +555,7 @@ CREATE INDEX IF NOT EXISTS idx_dim_teams_team_season
 
 -- 10. Meetings Dimension
 -- Dimension table for grands prix / meetings, combining season, round, circuit, and country/location metadata.
+-- date_end is calculated as first_session_date + 2 days (for 3-day weekends)
 CREATE MATERIALIZED VIEW IF NOT EXISTS gold.dim_meetings AS
 SELECT
     m.meeting_id,
@@ -568,9 +570,10 @@ SELECT
     c.country_code,
     co.country_name,
     co.flag_url,
+    c.circuit_svg,
     m.date_start,
     COALESCE(m.date_end, (
-        SELECT MAX(s.start_time)
+        SELECT MIN(s.start_time) + INTERVAL '2 days'
         FROM silver.sessions s
         WHERE s.meeting_id = m.meeting_id
     )) AS date_end

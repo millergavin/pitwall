@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" viewBox="0 0 300 300">
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" version="1.1" viewBox="0 0 300 300">
   <!-- Generator: Adobe Illustrator 30.0.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 123)  -->
   <defs>
     <style>
       .st0 {
-        fill: #051c96;
+        fill: #00a0de;
       }
     </style>
   </defs>
   <g id="svg6" inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)" sodipodi:docname="williams-racing-1.svg">
     <sodipodi:namedview id="namedview8" bordercolor="#eeeeee" borderopacity="1" inkscape:current-layer="svg6" inkscape:cx="153.85782" inkscape:cy="7.1222016" inkscape:deskcolor="#505050" inkscape:pagecheckerboard="true" inkscape:pageopacity="0" inkscape:showpageshadow="0" inkscape:window-height="1017" inkscape:window-maximized="1" inkscape:window-width="1920" inkscape:window-x="-8" inkscape:window-y="-8" inkscape:zoom="5.4758349" pagecolor="#505050" showgrid="false"/>
     <g id="g2301">
-      <path id="path2" class="st0" d="M146.59,51.44l-76.43,165.63,15.96,43.61h7.46l46.11-103.91c4.18-8.39,7.6-17.14,10.22-26.14,2.65,8.88,6.01,17.54,10.05,25.88l46.37,104.17h7.46l15.92-43.61L153.32,51.44h-6.73ZM58.77,53.16H10.29l54.95,150.49,25.88-56.42L58.77,53.16ZM208.36,146.72l26.23,56.94,55.12-150.49h-48.96l-32.39,93.56Z"/>
+      <path id="path2" class="st0" d="M146.6,51.4l-76.4,165.6,16,43.6h7.5l46.1-103.9c4.2-8.4,7.6-17.1,10.2-26.1,2.6,8.9,6,17.5,10.1,25.9l46.4,104.2h7.5l15.9-43.6L153.3,51.4h-6.7ZM58.8,53.2H10.3l54.9,150.5,25.9-56.4L58.8,53.2ZM208.4,146.7l26.2,56.9,55.1-150.5h-49l-32.4,93.6h0Z"/>
     </g>
   </g>
 </svg>

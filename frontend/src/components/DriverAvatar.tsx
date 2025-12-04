@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { FontAwesomeIcon } from '../lib/fontawesome';
+import { faUser } from '@fortawesome/free-solid-svg-icons';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 interface DriverAvatarProps {
   driverName: string;
-  nameAcronym: string;
+  nameAcronym?: string; // Optional - kept for backwards compatibility
   headshotUrl?: string | null;
   headshotOverride?: string | null;
   teamColor: string;
@@ -14,7 +16,6 @@ interface DriverAvatarProps {
 
 export const DriverAvatar = ({
   driverName,
-  nameAcronym,
   headshotUrl,
   headshotOverride,
   teamColor,
@@ -38,12 +39,12 @@ export const DriverAvatar = ({
     xl: 'w-24 h-24', // 96px - profile/social media size
   };
 
-  const acronymSizes = {
-    xs: 'text-[8px]',
-    sm: 'text-[10px]',
-    md: 'text-sm',
-    lg: 'text-lg',
-    xl: 'text-2xl',
+  const iconSizes = {
+    xs: 'w-3 h-3', // ~12px
+    sm: 'w-4 h-4', // ~16px
+    md: 'w-6 h-6', // ~24px
+    lg: 'w-8 h-8', // ~32px
+    xl: 'w-12 h-12', // ~48px
   };
 
   return (
@@ -67,25 +68,21 @@ export const DriverAvatar = ({
         <img
           src={imageUrl}
           alt={driverName}
-          className="w-full h-full object-cover relative z-10"
+          className="w-full h-full object-cover object-top relative z-10"
           onError={() => setImageError(true)}
         />
       ) : (
-        // Fallback to acronym
+        // Fallback to user silhouette icon
         <div className="w-full h-full flex items-center justify-center relative z-10">
-          <span
-            className={`text-white f1-display-bold ${acronymSizes[size]} opacity-90`}
-            style={{
-              textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-            }}
-          >
-            {nameAcronym}
-          </span>
+          <FontAwesomeIcon 
+            icon={faUser} 
+            className={`text-white/40 ${iconSizes[size]}`}
+          />
         </div>
       )}
 
       {/* Subtle border overlay */}
-      <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-white ring-opacity-10 pointer-events-none" />
+      <div className="absolute inset-0 rounded-full ring-1 ring-white ring-opacity-10 pointer-events-none" />
     </div>
   );
 };

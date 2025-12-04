@@ -454,7 +454,7 @@ export const Dashboard = () => {
 
           {/* Driver Championship - Column 2 */}
           <motion.div 
-            onClick={() => navigate('/championship')}
+            onClick={() => navigate('/championship?type=drivers')}
             className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden cursor-pointer"
             variants={{
               hidden: { opacity: 0, y: 20 },
@@ -547,7 +547,7 @@ export const Dashboard = () => {
 
           {/* Constructor Championship - Column 3 */}
           <motion.div 
-            onClick={() => navigate('/championship')}
+            onClick={() => navigate('/championship?type=constructors')}
             className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden cursor-pointer"
             variants={{
               hidden: { opacity: 0, y: 20 },
@@ -575,7 +575,7 @@ export const Dashboard = () => {
                         key={team.team_id}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate('/championship');
+                          navigate('/championship?type=constructors');
                         }}
                         className="relative aspect-[3/4] rounded-corner overflow-hidden cursor-pointer group"
                         style={{ backgroundColor: `#${team.color_hex}` }}

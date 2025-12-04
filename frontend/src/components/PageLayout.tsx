@@ -72,7 +72,7 @@ export const PageLayout = ({ children, pageTitle, sidebar }: PageLayoutProps) =>
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="p-6 flex-1 flex flex-col min-h-0">
+          <div className="p-6 pb-0 flex-1 flex flex-col min-h-0">
             {children}
           </div>
         </motion.main>

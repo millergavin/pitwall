@@ -11,6 +11,7 @@ import { DriverDetails } from './pages/DriverDetails';
 import { Teams } from './pages/Teams';
 import { TeamDetails } from './pages/TeamDetails';
 import { Admin } from './pages/Admin';
+import { Playground } from './pages/Playground';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
       <Route path="/teams" element={<Teams />} />
       <Route path="/teams/:teamId" element={<TeamDetails />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/playground" element={<Playground />} />
     </Routes>
   );
 }
