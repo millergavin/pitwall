@@ -344,7 +344,7 @@ export const Circuits = () => {
     <PageLayout pageTitle="Circuits" sidebar={<NavSidebar />}>
       <div className="flex h-full gap-4">
         {/* Circuit Sidebar */}
-        <div className="w-[360px] flex-shrink-0 bg-1 rounded-corner overflow-hidden">
+        <div className="w-[440px] flex-shrink-0 bg-1 rounded-corner overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-f1-red"></div>
