@@ -1,6 +1,42 @@
 {
-  "generated": "2025-12-03T04:21:46.884Z",
+  "generated": "2025-12-04T09:30:47.386Z",
   "commits": [
+    {
+      "hash": "62b2031",
+      "date": "2025-12-04",
+      "message": "Revamp session results table layout and add practice session support",
+      "author": "millergavin"
+    },
+    {
+      "hash": "c92cd7d",
+      "date": "2025-12-02",
+      "message": "Add Shift+S keyboard shortcut and fancy top 3 cards to dashboard",
+      "author": "millergavin"
+    },
+    {
+      "hash": "a0051a6",
+      "date": "2025-12-02",
+      "message": "Update dashboard championship views, add team details",
+      "author": "millergavin"
+    },
+    {
+      "hash": "87468b9",
+      "date": "2025-12-02",
+      "message": "Fix team details API endpoint - correct season stats query",
+      "author": "millergavin"
+    },
+    {
+      "hash": "fafa875",
+      "date": "2025-12-02",
+      "message": "Add team details page with driver roster and bidirectional navigation",
+      "author": "millergavin"
+    },
+    {
+      "hash": "67a1ae5",
+      "date": "2025-12-02",
+      "message": "Add changelog panel with auto-generated commit history",
+      "author": "millergavin"
+    },
     {
       "hash": "ecccf49",
       "date": "2025-12-02",
