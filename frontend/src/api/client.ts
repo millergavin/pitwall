@@ -1,9 +1,30 @@
 // In production, use the full API URL; in dev, use Vite proxy
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Default to production API URL if not set (for Vercel deployments)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD ? 'https://api.pitwall.one/api' : '/api');
+
+// Helper to construct API URLs
+const getApiUrl = (path: string): string => {
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  
+  // If API_BASE_URL is a full URL (starts with http), use it directly
+  if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
+    return `${API_BASE_URL}${cleanPath}`;
+  }
+  // Otherwise, return the relative path (will be used with window.location.origin)
+  return `${API_BASE_URL}${cleanPath}`;
+};
+
+// Helper to create a URL object, handling both absolute and relative URLs
+const createApiUrl = (path: string): URL => {
+  const urlString = getApiUrl(path);
+  // If it's already an absolute URL, new URL will ignore the base
+  return new URL(urlString, window.location.origin);
+};
 
 export const api = {
   drivers: async (season?: number) => {
-    const url = new URL(`${API_BASE_URL}/drivers`, window.location.origin);
+    const url = createApiUrl('/drivers');
     if (season) {
       url.searchParams.append('season', season.toString());
     }
@@ -15,7 +36,7 @@ export const api = {
   },
 
   driversRoster: async (season: number = 2025) => {
-    const url = new URL(`${API_BASE_URL}/drivers/roster`, window.location.origin);
+    const url = createApiUrl('/drivers/roster');
     url.searchParams.append('season', season.toString());
     const response = await fetch(url.toString());
     if (!response.ok) {
@@ -25,7 +46,7 @@ export const api = {
   },
 
   driverDetail: async (driverId: string, season: number = 2025) => {
-    const url = new URL(`${API_BASE_URL}/drivers/${driverId}`, window.location.origin);
+    const url = createApiUrl(`/drivers/${driverId}`);
     url.searchParams.append('season', season.toString());
     const response = await fetch(url.toString());
     if (!response.ok) {
@@ -35,7 +56,7 @@ export const api = {
   },
 
   teamDetail: async (teamId: string, season: number = 2025) => {
-    const url = new URL(`${API_BASE_URL}/teams/${teamId}`, window.location.origin);
+    const url = createApiUrl(`/teams/${teamId}`);
     url.searchParams.append('season', season.toString());
     const response = await fetch(url.toString());
     if (!response.ok) {
@@ -45,7 +66,7 @@ export const api = {
   },
 
   teamsRoster: async (season: number = 2025) => {
-    const url = new URL(`${API_BASE_URL}/teams/roster`, window.location.origin);
+    const url = createApiUrl('/teams/roster');
     url.searchParams.append('season', season.toString());
     const response = await fetch(url.toString());
     if (!response.ok) {
@@ -56,7 +77,7 @@ export const api = {
 
   standings: {
     drivers: async (season: number = 2024) => {
-      const url = new URL(`${API_BASE_URL}/standings/drivers`, window.location.origin);
+      const url = createApiUrl('/standings/drivers');
       url.searchParams.append('season', season.toString());
       const response = await fetch(url.toString());
       if (!response.ok) {
@@ -66,7 +87,7 @@ export const api = {
     },
 
     constructors: async (season: number = 2024) => {
-      const url = new URL(`${API_BASE_URL}/standings/constructors`, window.location.origin);
+      const url = createApiUrl('/standings/constructors');
       url.searchParams.append('season', season.toString());
       const response = await fetch(url.toString());
       if (!response.ok) {
@@ -77,7 +98,7 @@ export const api = {
   },
 
   circuits: async () => {
-    const url = new URL(`${API_BASE_URL}/circuits`, window.location.origin);
+    const url = createApiUrl('/circuits');
     const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -95,7 +116,7 @@ export const api = {
     year?: number;
     coverOnly?: boolean;
   }) => {
-    const url = new URL(`${API_BASE_URL}/images`, window.location.origin);
+    const url = createApiUrl('/images');
     if (options?.circuitId) url.searchParams.append('circuit_id', options.circuitId);
     if (options?.driverId) url.searchParams.append('driver_id', options.driverId);
     if (options?.teamId) url.searchParams.append('team_id', options.teamId);
@@ -113,7 +134,7 @@ export const api = {
   },
 
   meetings: async (season?: number) => {
-    const url = new URL(`${API_BASE_URL}/meetings`, window.location.origin);
+    const url = createApiUrl('/meetings');
     if (season) {
       url.searchParams.append('season', season.toString());
     }
@@ -125,7 +146,7 @@ export const api = {
   },
 
   seasons: async (): Promise<number[]> => {
-    const url = new URL(`${API_BASE_URL}/seasons`, window.location.origin);
+    const url = createApiUrl('/seasons');
     const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -134,7 +155,7 @@ export const api = {
   },
 
   meeting: async (meetingId: string) => {
-    const url = new URL(`${API_BASE_URL}/meetings/${meetingId}`, window.location.origin);
+    const url = createApiUrl(`/meetings/${meetingId}`);
     const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -143,7 +164,7 @@ export const api = {
   },
 
   meetingSessions: async (meetingId: string) => {
-    const url = new URL(`${API_BASE_URL}/meetings/${meetingId}/sessions`, window.location.origin);
+    const url = createApiUrl(`/meetings/${meetingId}/sessions`);
     const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -152,7 +173,7 @@ export const api = {
   },
 
   session: async (sessionId: string) => {
-    const url = new URL(`${API_BASE_URL}/sessions/${sessionId}`, window.location.origin);
+    const url = createApiUrl(`/sessions/${sessionId}`);
     const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -161,7 +182,7 @@ export const api = {
   },
 
   sessionClassification: async (sessionId: string) => {
-    const url = new URL(`${API_BASE_URL}/sessions/${sessionId}/classification`, window.location.origin);
+    const url = createApiUrl(`/sessions/${sessionId}/classification`);
     const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -170,7 +191,7 @@ export const api = {
   },
 
   lapChart: async (sessionId: string) => {
-    const url = new URL(`${API_BASE_URL}/sessions/${sessionId}/lap-chart`, window.location.origin);
+    const url = createApiUrl(`/sessions/${sessionId}/lap-chart`);
     const response = await fetch(url.toString());
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -181,7 +202,7 @@ export const api = {
   // Database management
   database: {
     status: async () => {
-      const url = new URL(`${API_BASE_URL}/database/status`, window.location.origin);
+      const url = createApiUrl('/database/status');
       const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -190,7 +211,7 @@ export const api = {
     },
 
     update: async (skipHighVolume: boolean = true) => {
-      const url = new URL(`${API_BASE_URL}/database/update`, window.location.origin);
+      const url = createApiUrl('/database/update');
       url.searchParams.append('skip_high_volume', skipHighVolume.toString());
       const response = await fetch(url.toString(), { method: 'POST' });
       if (!response.ok) {
@@ -203,7 +224,7 @@ export const api = {
     },
 
     refreshGold: async () => {
-      const url = new URL(`${API_BASE_URL}/database/refresh-gold`, window.location.origin);
+      const url = createApiUrl('/database/refresh-gold');
       const response = await fetch(url.toString(), { method: 'POST' });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -212,7 +233,7 @@ export const api = {
     },
 
     dockerStatus: async () => {
-      const url = new URL(`${API_BASE_URL}/database/docker-status`, window.location.origin);
+      const url = createApiUrl('/database/docker-status');
       const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -221,7 +242,7 @@ export const api = {
     },
 
     startDocker: async () => {
-      const url = new URL(`${API_BASE_URL}/database/start-docker`, window.location.origin);
+      const url = createApiUrl('/database/start-docker');
       const response = await fetch(url.toString(), { method: 'POST' });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
