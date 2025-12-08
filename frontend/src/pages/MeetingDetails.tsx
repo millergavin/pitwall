@@ -126,7 +126,7 @@ export const MeetingDetails = () => {
   const [lapTimesLoading, setLapTimesLoading] = useState(false);
   const [segmentMeaning, setSegmentMeaning] = useState<Record<number, { color_label: string | null; meaning: string | null }>>({});
   const [selectedLapTimesDriverId, setSelectedLapTimesDriverId] = useState<string | null>(null);
-  const [selectedLapPaceDriverId, setSelectedLapPaceDriverId] = useState<string | null>(null);
+  const [selectedLapPaceDriverId, setSelectedLapPaceDriverId] = useState<string | 'ALL' | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -270,7 +270,7 @@ export const MeetingDetails = () => {
             setSelectedLapTimesDriverId(firstDriver.driver_id);
           }
           if (!selectedLapPaceDriverId) {
-            setSelectedLapPaceDriverId(firstDriver.driver_id);
+            setSelectedLapPaceDriverId('ALL');
           }
         }
       } catch (err) {
@@ -858,10 +858,11 @@ const LapTimesTab = ({
       <div className="flex items-center gap-2">
         <label className="text-zinc-400 text-sm">Driver:</label>
         <select
-          value={selectedDriverId || ''}
-          onChange={(e) => onSelectDriver(e.target.value || null)}
+          value={selectedDriverId || 'ALL'}
+          onChange={(e) => onSelectDriver(e.target.value === 'ALL' ? 'ALL' : (e.target.value || null))}
           className="bg-zinc-900 text-white text-sm px-3 py-2 rounded border border-zinc-800 focus:outline-none"
         >
+          <option value="ALL">All Drivers</option>
           {driversForSession.map((d) => (
             <option key={d.driver_id} value={d.driver_id}>
               {d.driver_number ? `${d.driver_number} - ` : ''}{d.driver_name}
@@ -927,8 +928,8 @@ interface LapPaceTabProps {
   lapTimes: LapTimeRow[];
   lapTimesLoading: boolean;
   classification: ClassificationData[];
-  selectedDriverId: string | null;
-  onSelectDriver: (driverId: string | null) => void;
+  selectedDriverId: string | 'ALL' | null;
+  onSelectDriver: (driverId: string | 'ALL' | null) => void;
 }
 
 const LapPaceTab = ({
@@ -942,12 +943,18 @@ const LapPaceTab = ({
   if (!sessionId) return null;
 
   const driversForSession = classification.filter(c => c.session_id === sessionId);
+  const selectedDriverIds = selectedDriverId === 'ALL'
+    ? driversForSession.map(d => d.driver_id)
+    : selectedDriverId
+      ? [selectedDriverId]
+      : [];
+
   const driverLapTimes = lapTimes
-    .filter(l => l.session_id === sessionId && l.driver_id === selectedDriverId && l.lap_duration_ms !== null && l.lap_duration_ms !== undefined)
-    .sort((a, b) => a.lap_number - b.lap_number);
+    .filter(l => l.session_id === sessionId && selectedDriverIds.includes(l.driver_id) && l.lap_duration_ms !== null && l.lap_duration_ms !== undefined)
+    .sort((a, b) => a.lap_number - b.lap_number || a.driver_id.localeCompare(b.driver_id));
 
   const lapNumbers = driverLapTimes.map(l => l.lap_number);
-  const lapDurations = driverLapTimes.map(l => l.lap_duration_ms || 0);
+    const lapDurations = driverLapTimes.map(l => l.lap_duration_ms || 0);
 
   const minLap = lapNumbers.length ? Math.min(...lapNumbers) : 0;
   const maxLap = lapNumbers.length ? Math.max(...lapNumbers) : 1;
@@ -1038,14 +1045,22 @@ const LapPaceTab = ({
                 })}
               />
 
-              <LinePath
-                data={driverLapTimes}
-                x={(d) => xScale(d.lap_number) ?? 0}
-                y={(d) => yScale(d.lap_duration_ms || 0) ?? 0}
-                stroke={driverLapTimes[0]?.color_hex?.startsWith('#') ? driverLapTimes[0].color_hex : '#ffffff'}
-                strokeWidth={2}
-                strokeOpacity={0.9}
-              />
+              {selectedDriverIds.map((driverId) => {
+                const series = driverLapTimes.filter(d => d.driver_id === driverId);
+                if (!series.length) return null;
+                const strokeColor = series[0]?.color_hex?.startsWith('#') ? series[0].color_hex : '#ffffff';
+                return (
+                  <LinePath
+                    key={driverId}
+                    data={series}
+                    x={(d) => xScale(d.lap_number) ?? 0}
+                    y={(d) => yScale(d.lap_duration_ms || 0) ?? 0}
+                    stroke={strokeColor}
+                    strokeWidth={2}
+                    strokeOpacity={0.9}
+                  />
+                );
+              })}
             </Group>
           </svg>
         )}
