@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/PageLayout';
 import { NavSidebar } from '../components/NavSidebar';
@@ -16,8 +16,8 @@ import {
 import { api } from '../api/client';
 import { Group } from '@visx/group';
 import { LinePath } from '@visx/shape';
-import { scaleLinear } from '@visx/scale';
 import { AxisLeft, AxisBottom } from '@visx/axis';
+import { scaleLinear } from '@visx/scale';
 
 interface MeetingData {
   meeting_id: string;
@@ -79,22 +79,12 @@ interface ClassificationData {
   points: number | null;
 }
 
+type DetailTab = 'results' | 'lap-chart' | 'lap-times' | 'lap-pace';
+
 interface LapTimeRow {
-  season: number;
-  round_number: number;
-  meeting_official_name: string;
-  session_type: string;
   session_id: string;
   driver_id: string;
-  driver_number: number;
-  driver_name: string;
-  name_acronym: string;
-  team_id: string;
-  team_name: string;
-  display_name: string;
-  color_hex: string;
   lap_number: number;
-  date_start: string;
   lap_duration_ms: number | null;
   duration_s1_ms: number | null;
   duration_s2_ms: number | null;
@@ -102,17 +92,346 @@ interface LapTimeRow {
   s1_segments: number[] | null;
   s2_segments: number[] | null;
   s3_segments: number[] | null;
-  i1_speed_kph: number | null;
-  i2_speed_kph: number | null;
-  st_speed_kph: number | null;
-  is_pit_in_lap: boolean;
-  is_pit_out_lap: boolean;
-  is_valid: boolean;
-  lap_time_s: number | null;
-  cumulative_time_ms: number | null;
+  color_hex: string | null;
 }
 
-type DetailTab = 'results' | 'lap-chart' | 'lap-times' | 'lap-pace';
+interface LapTimesTabProps {
+  sessionId: string | null;
+  lapTimes: LapTimeRow[];
+  lapTimesLoading: boolean;
+  classification: ClassificationData[];
+  selectedDriverId: string | null;
+  onSelectDriver: (driverId: string | null) => void;
+  segmentMeaning: Record<number, { color_label: string | null; meaning: string | null }>;
+}
+
+const LapTimesTab = ({
+  sessionId,
+  lapTimes,
+  lapTimesLoading,
+  classification,
+  selectedDriverId,
+  onSelectDriver,
+  segmentMeaning,
+}: LapTimesTabProps) => {
+  if (!sessionId) return null;
+
+  const formatLap = (ms: number | null | undefined) => {
+    if (ms === null || ms === undefined) return '-';
+    const totalSeconds = ms / 1000;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toFixed(3).padStart(6, '0')}`;
+  };
+
+  const driversForSession = classification.filter(c => c.session_id === sessionId);
+  const driverLapTimes = lapTimes.filter(l => l.session_id === sessionId && l.driver_id === selectedDriverId);
+
+  const sectorMin = (key: 'duration_s1_ms' | 'duration_s2_ms' | 'duration_s3_ms') => {
+    const vals = lapTimes
+      .filter(l => l.session_id === sessionId)
+      .map(l => l[key])
+      .filter((v): v is number => v !== null && v !== undefined && v > 0);
+    return vals.length ? Math.min(...vals) : null;
+  };
+  const sessionFastest = {
+    s1: sectorMin('duration_s1_ms'),
+    s2: sectorMin('duration_s2_ms'),
+    s3: sectorMin('duration_s3_ms'),
+  };
+
+  const driverBest = {
+    s1: driverLapTimes
+      .map(l => l.duration_s1_ms)
+      .filter((v): v is number => v !== null && v !== undefined && v > 0)
+      .reduce<number | null>((min, v) => (min === null ? v : Math.min(min, v)), null),
+    s2: driverLapTimes
+      .map(l => l.duration_s2_ms)
+      .filter((v): v is number => v !== null && v !== undefined && v > 0)
+      .reduce<number | null>((min, v) => (min === null ? v : Math.min(min, v)), null),
+    s3: driverLapTimes
+      .map(l => l.duration_s3_ms)
+      .filter((v): v is number => v !== null && v !== undefined && v > 0)
+      .reduce<number | null>((min, v) => (min === null ? v : Math.min(min, v)), null),
+  };
+
+  const sectorColor = (ms: number | null, fastest: number | null, personal: number | null) => {
+    if (ms === null || ms === undefined) return 'text-zinc-500';
+    if (fastest && ms === fastest) return 'text-purple-500';
+    if (personal && ms === personal) return 'text-green-500';
+    return 'text-zinc-300';
+  };
+
+  const segmentColorClass = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return 'bg-zinc-800';
+    const meaning = segmentMeaning[value];
+    const label = meaning?.color_label?.toLowerCase() || '';
+    if (label.includes('purple')) return 'bg-purple-500';
+    if (label.includes('green')) return 'bg-green-500';
+    if (label.includes('yellow')) return 'bg-yellow-500';
+    return 'bg-zinc-800';
+  };
+
+  const renderSegments = (segments: number[] | null | undefined) => {
+    if (!segments || segments.length === 0) {
+      return <div className="flex gap-1">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-4 w-3 rounded bg-zinc-800" />)}</div>;
+    }
+    return (
+      <div className="flex gap-1">
+        {segments.map((val, idx) => (
+          <div
+            key={idx}
+            className={`h-4 w-3 rounded ${segmentColorClass(val)}`}
+            title={segmentMeaning[val]?.meaning || undefined}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  const formatSectorTime = (ms: number | null) => formatLap(ms);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <label className="text-zinc-400 text-sm">Driver:</label>
+        <select
+          value={selectedDriverId || ''}
+          onChange={(e) => onSelectDriver(e.target.value || null)}
+          className="bg-zinc-900 text-white text-sm px-3 py-2 rounded border border-zinc-800 focus:outline-none"
+        >
+          {driversForSession.map((d) => (
+            <option key={d.driver_id} value={d.driver_id}>
+              {d.driver_number ? `${d.driver_number} - ` : ''}{d.driver_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm text-zinc-200">
+          <thead className="text-xs uppercase text-zinc-500">
+            <tr className="border-b border-zinc-800">
+              <th className="py-2 px-2 text-left">Lap</th>
+              <th className="py-2 px-2 text-left">Lap Time</th>
+              <th className="py-2 px-2 text-left">Sector 1</th>
+              <th className="py-2 px-2 text-left">Sector 2</th>
+              <th className="py-2 px-2 text-left">Sector 3</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lapTimesLoading && (
+              <tr>
+                <td colSpan={5} className="py-6 text-center text-zinc-500">Loading lap times…</td>
+              </tr>
+            )}
+            {!lapTimesLoading && driverLapTimes.length === 0 && (
+              <tr>
+                <td colSpan={5} className="py-6 text-center text-zinc-500">No lap times available</td>
+              </tr>
+            )}
+            {!lapTimesLoading && driverLapTimes.map((lap) => (
+              <tr key={`${lap.driver_id}-${lap.lap_number}`} className="border-b border-zinc-900">
+                <td className="py-2 px-2 font-mono text-zinc-400">{lap.lap_number}</td>
+                <td className="py-2 px-2 font-mono text-white">{formatLap(lap.lap_duration_ms)}</td>
+                {[1,2,3].map((sector) => {
+                  const duration = sector === 1 ? lap.duration_s1_ms : sector === 2 ? lap.duration_s2_ms : lap.duration_s3_ms;
+                  const fastest = sector === 1 ? sessionFastest.s1 : sector === 2 ? sessionFastest.s2 : sessionFastest.s3;
+                  const personal = sector === 1 ? driverBest.s1 : sector === 2 ? driverBest.s2 : driverBest.s3;
+                  const segments = sector === 1 ? lap.s1_segments : sector === 2 ? lap.s2_segments : lap.s3_segments;
+                  return (
+                    <td key={sector} className="py-2 px-2">
+                      <div className={`font-mono text-sm ${sectorColor(duration, fastest, personal)}`}>
+                        {formatSectorTime(duration)}
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        {renderSegments(segments)}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+interface LapPaceTabProps {
+  sessionId: string | null;
+  lapTimes: LapTimeRow[];
+  lapTimesLoading: boolean;
+  classification: ClassificationData[];
+  selectedDriverId: string | 'ALL' | null;
+  onSelectDriver: (driverId: string | 'ALL' | null) => void;
+}
+
+const LapPaceTab = ({
+  sessionId,
+  lapTimes,
+  lapTimesLoading,
+  classification,
+  selectedDriverId,
+  onSelectDriver,
+}: LapPaceTabProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 1200, height: 600 });
+
+  // Measure container and update dimensions
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        const { width, height } = entries[0].contentRect;
+        setDimensions({ width, height });
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  if (!sessionId) return null;
+
+  const driversForSession = classification.filter(c => c.session_id === sessionId);
+  const selectedDriverIds = selectedDriverId === 'ALL'
+    ? driversForSession.map(d => d.driver_id)
+    : selectedDriverId
+      ? [selectedDriverId]
+      : [];
+
+  // Create a map of driver_id to team color from classification
+  const driverColorMap = new Map<string, string>();
+  driversForSession.forEach((d) => {
+    driverColorMap.set(d.driver_id, d.color_hex);
+  });
+
+  const driverLapTimes = lapTimes
+    .filter(l => l.session_id === sessionId && selectedDriverIds.includes(l.driver_id) && l.lap_duration_ms !== null && l.lap_duration_ms !== undefined)
+    .sort((a, b) => a.lap_number - b.lap_number || a.driver_id.localeCompare(b.driver_id));
+
+  const lapNumbers = driverLapTimes.map(l => l.lap_number);
+  const lapDurations = driverLapTimes.map(l => l.lap_duration_ms || 0);
+
+  const minLap = lapNumbers.length ? Math.min(...lapNumbers) : 0;
+  const maxLap = lapNumbers.length ? Math.max(...lapNumbers) : 1;
+  const minTime = lapDurations.length ? Math.min(...lapDurations) : 0;
+  const maxTime = lapDurations.length ? Math.max(...lapDurations) : 1;
+
+  const yMin = minTime * 0.98;
+  const yMax = maxTime * 1.02;
+
+  const { width, height } = dimensions;
+  const margin = { top: 20, right: 20, bottom: 40, left: 60 };
+  const xMax = width - margin.left - margin.right;
+  const yMaxPx = height - margin.top - margin.bottom;
+
+  const xScale = scaleLinear({
+    domain: [minLap || 0, maxLap || 1],
+    range: [0, xMax],
+    nice: true,
+  });
+
+  const yScale = scaleLinear({
+    domain: [yMax, yMin || 0],
+    range: [yMaxPx, 0],
+    nice: true,
+  });
+
+  const formatLapLabel = (ms: number | null | undefined) => {
+    if (ms === null || ms === undefined) return '-';
+    const totalSeconds = ms / 1000;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toFixed(3).padStart(6, '0')}`;
+  };
+
+  return (
+    <div className="flex flex-col gap-4 h-full">
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <label className="text-zinc-400 text-sm">Driver:</label>
+        <select
+          value={selectedDriverId || 'ALL'}
+          onChange={(e) => onSelectDriver(e.target.value === 'ALL' ? 'ALL' : (e.target.value || null))}
+          className="bg-zinc-900 text-white text-sm px-3 py-2 rounded border border-zinc-800 focus:outline-none"
+        >
+          <option value="ALL">All Drivers</option>
+          {driversForSession.map((d) => (
+            <option key={d.driver_id} value={d.driver_id}>
+              {d.driver_number ? `${d.driver_number} - ` : ''}{d.driver_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div ref={containerRef} className="bg-black rounded-corner overflow-hidden flex-1 min-h-0">
+        {lapTimesLoading && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-zinc-500">Loading lap pace…</div>
+          </div>
+        )}
+        {!lapTimesLoading && driverLapTimes.length === 0 && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-zinc-500">No lap data available</div>
+          </div>
+        )}
+        {!lapTimesLoading && driverLapTimes.length > 0 && (
+          <svg width={width} height={height}>
+            <Group left={margin.left} top={margin.top}>
+              <AxisLeft
+                scale={yScale}
+                tickFormat={(val: number | { valueOf(): number }) => formatLapLabel(Number(val))}
+                stroke="#52525b"
+                tickStroke="#52525b"
+                tickLabelProps={() => ({
+                  fill: '#a1a1aa',
+                  fontSize: 10,
+                  fontFamily: 'var(--font-mono)',
+                  textAnchor: 'end',
+                  dx: -6,
+                })}
+              />
+              <AxisBottom
+                top={yMaxPx}
+                scale={xScale}
+                stroke="#52525b"
+                tickStroke="#52525b"
+                tickLabelProps={() => ({
+                  fill: '#a1a1aa',
+                  fontSize: 10,
+                  fontFamily: 'var(--font-mono)',
+                  textAnchor: 'middle',
+                  dy: 12,
+                })}
+              />
+
+              {selectedDriverIds.map((driverId) => {
+                const series = driverLapTimes.filter(d => d.driver_id === driverId);
+                if (!series.length) return null;
+                const teamColor = driverColorMap.get(driverId) || '#ffffff';
+                const strokeColor = teamColor.startsWith('#') ? teamColor : `#${teamColor}`;
+                return (
+                  <LinePath
+                    key={driverId}
+                    data={series}
+                    x={(d: LapTimeRow) => xScale(d.lap_number) ?? 0}
+                    y={(d: LapTimeRow) => yScale(d.lap_duration_ms || 0) ?? 0}
+                    stroke={strokeColor}
+                    strokeWidth={2}
+                    strokeOpacity={0.9}
+                  />
+                );
+              })}
+            </Group>
+          </svg>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const MeetingDetails = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
@@ -197,33 +516,6 @@ export const MeetingDetails = () => {
     fetchClassification();
   }, [selectedSessionId]);
 
-  // When classification changes for selected session, set default lap-times driver
-  useEffect(() => {
-    if (!selectedSessionId) return;
-    if (selectedLapTimesDriverId) return;
-    const firstDriver = classification.find(c => c.session_id === selectedSessionId);
-    if (firstDriver) {
-      setSelectedLapTimesDriverId(firstDriver.driver_id);
-    }
-  }, [classification, selectedSessionId, selectedLapTimesDriverId]);
-
-  // Fetch segment meaning once
-  useEffect(() => {
-    const loadSegmentMeaning = async () => {
-      try {
-        const mapping = await api.segmentMeaning();
-        const map: Record<number, { color_label: string | null; meaning: string | null }> = {};
-        mapping.forEach((row: any) => {
-          map[row.segment_value] = { color_label: row.color_label, meaning: row.meaning };
-        });
-        setSegmentMeaning(map);
-      } catch (err) {
-        console.error('Failed to load segment meaning:', err);
-      }
-    };
-    loadSegmentMeaning();
-  }, []);
-
   // Fetch lap chart data when selected session changes (only for race/sprint)
   useEffect(() => {
     const fetchLapChart = async () => {
@@ -248,29 +540,21 @@ export const MeetingDetails = () => {
     fetchLapChart();
   }, [selectedSessionId, sessions]);
 
-  // Fetch lap times (only race/sprint) when tab is lap-times or lap-pace
+  // Fetch lap times when selected session changes (only for race/sprint)
   useEffect(() => {
     const fetchLapTimes = async () => {
-      if (!['lap-times', 'lap-pace'].includes(selectedDetailTab)) return;
       if (!selectedSessionId) return;
+      
       const session = sessions.find(s => s.session_id === selectedSessionId);
       if (!session || !['race', 'sprint'].includes(session.session_type)) {
         setLapTimes([]);
         return;
       }
+      
+      setLapTimesLoading(true);
       try {
-        setLapTimesLoading(true);
         const data = await api.lapTimes(selectedSessionId);
-        setLapTimes(data || []);
-        const firstDriver = classification.find(c => c.session_id === selectedSessionId);
-        if (firstDriver) {
-          if (!selectedLapTimesDriverId) {
-            setSelectedLapTimesDriverId(firstDriver.driver_id);
-          }
-          if (!selectedLapPaceDriverId) {
-            setSelectedLapPaceDriverId('ALL');
-          }
-        }
+        setLapTimes(data);
       } catch (err) {
         console.error('Failed to load lap times:', err);
         setLapTimes([]);
@@ -278,8 +562,50 @@ export const MeetingDetails = () => {
         setLapTimesLoading(false);
       }
     };
+
     fetchLapTimes();
-  }, [selectedDetailTab, selectedSessionId, sessions, classification, selectedLapTimesDriverId, selectedLapPaceDriverId]);
+  }, [selectedSessionId, sessions]);
+
+  // Fetch segment meaning on mount
+  useEffect(() => {
+    const fetchSegmentMeaning = async () => {
+      try {
+        const data = await api.segmentMeaning();
+        const mapping: Record<number, { color_label: string | null; meaning: string | null }> = {};
+        data.forEach((item: { segment_value: number; color_label: string | null; meaning: string | null }) => {
+          mapping[item.segment_value] = {
+            color_label: item.color_label,
+            meaning: item.meaning,
+          };
+        });
+        setSegmentMeaning(mapping);
+      } catch (err) {
+        console.error('Failed to load segment meaning:', err);
+      }
+    };
+
+    fetchSegmentMeaning();
+  }, []);
+
+  // Set default selected driver for lap times tab
+  useEffect(() => {
+    if (selectedSessionId && classification.length > 0) {
+      const driversForSession = classification.filter(c => c.session_id === selectedSessionId);
+      if (driversForSession.length > 0 && !selectedLapTimesDriverId) {
+        setSelectedLapTimesDriverId(driversForSession[0].driver_id);
+      }
+    }
+  }, [selectedSessionId, classification, selectedLapTimesDriverId]);
+
+  // Set default selected driver for lap pace tab
+  useEffect(() => {
+    if (selectedSessionId && classification.length > 0) {
+      const driversForSession = classification.filter(c => c.session_id === selectedSessionId);
+      if (driversForSession.length > 0 && selectedLapPaceDriverId === null) {
+        setSelectedLapPaceDriverId('ALL');
+      }
+    }
+  }, [selectedSessionId, classification, selectedLapPaceDriverId]);
 
   const getCircuitDisplayName = (): string => {
     if (!meeting) return '';
@@ -633,34 +959,32 @@ export const MeetingDetails = () => {
                 Results
               </TabButton>
               {isRaceOrSprint && (
-                <TabButton
-                  variant="ghost"
-                  size="sm"
-                  active={selectedDetailTab === 'lap-chart'}
-                  onClick={() => setSelectedDetailTab('lap-chart')}
-                >
-                  Lap Chart
-                </TabButton>
-              )}
-              {isRaceOrSprint && (
-                <TabButton
-                  variant="ghost"
-                  size="sm"
-                  active={selectedDetailTab === 'lap-times'}
-                  onClick={() => setSelectedDetailTab('lap-times')}
-                >
-                  Lap Times
-                </TabButton>
-              )}
-              {isRaceOrSprint && (
-                <TabButton
-                  variant="ghost"
-                  size="sm"
-                  active={selectedDetailTab === 'lap-pace'}
-                  onClick={() => setSelectedDetailTab('lap-pace')}
-                >
-                  Lap Pace
-                </TabButton>
+                <>
+                  <TabButton
+                    variant="ghost"
+                    size="sm"
+                    active={selectedDetailTab === 'lap-chart'}
+                    onClick={() => setSelectedDetailTab('lap-chart')}
+                  >
+                    Lap Chart
+                  </TabButton>
+                  <TabButton
+                    variant="ghost"
+                    size="sm"
+                    active={selectedDetailTab === 'lap-times'}
+                    onClick={() => setSelectedDetailTab('lap-times')}
+                  >
+                    Lap Times
+                  </TabButton>
+                  <TabButton
+                    variant="ghost"
+                    size="sm"
+                    active={selectedDetailTab === 'lap-pace'}
+                    onClick={() => setSelectedDetailTab('lap-pace')}
+                  >
+                    Lap Pace
+                  </TabButton>
+                </>
               )}
             </div>
 
@@ -719,9 +1043,9 @@ export const MeetingDetails = () => {
                 )
               )}
 
-              {selectedDetailTab === 'lap-times' && isRaceOrSprint && (
+              {selectedDetailTab === 'lap-times' && selectedSession && (
                 <LapTimesTab
-                  sessionId={selectedSessionId}
+                  sessionId={selectedSession.session_id}
                   lapTimes={lapTimes}
                   lapTimesLoading={lapTimesLoading}
                   classification={classification}
@@ -731,9 +1055,9 @@ export const MeetingDetails = () => {
                 />
               )}
 
-              {selectedDetailTab === 'lap-pace' && isRaceOrSprint && (
+              {selectedDetailTab === 'lap-pace' && selectedSession && (
                 <LapPaceTab
-                  sessionId={selectedSessionId}
+                  sessionId={selectedSession.session_id}
                   lapTimes={lapTimes}
                   lapTimesLoading={lapTimesLoading}
                   classification={classification}
@@ -748,315 +1072,3 @@ export const MeetingDetails = () => {
     </PageLayout>
   );
 };
-
-interface LapTimesTabProps {
-  sessionId: string | null;
-  lapTimes: LapTimeRow[];
-  lapTimesLoading: boolean;
-  classification: ClassificationData[];
-  selectedDriverId: string | null;
-  onSelectDriver: (driverId: string | null) => void;
-  segmentMeaning: Record<number, { color_label: string | null; meaning: string | null }>;
-}
-
-const LapTimesTab = ({
-  sessionId,
-  lapTimes,
-  lapTimesLoading,
-  classification,
-  selectedDriverId,
-  onSelectDriver,
-  segmentMeaning,
-}: LapTimesTabProps) => {
-  if (!sessionId) return null;
-
-  const formatLap = (ms: number | null | undefined) => {
-    if (ms === null || ms === undefined) return '-';
-    const totalSeconds = ms / 1000;
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toFixed(3).padStart(6, '0')}`;
-  };
-
-  const driversForSession = classification.filter(c => c.session_id === sessionId);
-
-  const driverLapTimes = lapTimes.filter(l => l.session_id === sessionId && l.driver_id === selectedDriverId);
-
-  const sectorMin = (key: 'duration_s1_ms' | 'duration_s2_ms' | 'duration_s3_ms') => {
-    const vals = lapTimes
-      .filter(l => l.session_id === sessionId)
-      .map(l => l[key])
-      .filter((v): v is number => v !== null && v !== undefined && v > 0);
-    return vals.length ? Math.min(...vals) : null;
-  };
-  const sessionFastest = {
-    s1: sectorMin('duration_s1_ms'),
-    s2: sectorMin('duration_s2_ms'),
-    s3: sectorMin('duration_s3_ms'),
-  };
-
-  const driverBest = {
-    s1: driverLapTimes
-      .map(l => l.duration_s1_ms)
-      .filter((v): v is number => v !== null && v !== undefined && v > 0)
-      .reduce<number | null>((min, v) => (min === null ? v : Math.min(min, v)), null),
-    s2: driverLapTimes
-      .map(l => l.duration_s2_ms)
-      .filter((v): v is number => v !== null && v !== undefined && v > 0)
-      .reduce<number | null>((min, v) => (min === null ? v : Math.min(min, v)), null),
-    s3: driverLapTimes
-      .map(l => l.duration_s3_ms)
-      .filter((v): v is number => v !== null && v !== undefined && v > 0)
-      .reduce<number | null>((min, v) => (min === null ? v : Math.min(min, v)), null),
-  };
-
-  const sectorColor = (ms: number | null, fastest: number | null, personal: number | null) => {
-    if (ms === null || ms === undefined) return 'text-zinc-500';
-    if (fastest && ms === fastest) return 'text-purple-500';
-    if (personal && ms === personal) return 'text-green-500';
-    return 'text-zinc-300';
-  };
-
-  const segmentColorClass = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return 'bg-zinc-800';
-    const meaning = segmentMeaning[value];
-    const label = meaning?.color_label?.toLowerCase() || '';
-    if (label.includes('purple')) return 'bg-purple-500';
-    if (label.includes('green')) return 'bg-green-500';
-    if (label.includes('yellow')) return 'bg-yellow-500';
-    return 'bg-zinc-800';
-  };
-
-  const renderSegments = (segments: number[] | null | undefined) => {
-    if (!segments || segments.length === 0) {
-      return <div className="flex gap-1">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-4 w-3 rounded bg-zinc-800" />)}</div>;
-    }
-    return (
-      <div className="flex gap-1">
-        {segments.map((val, idx) => (
-          <div
-            key={idx}
-            className={`h-4 w-3 rounded ${segmentColorClass(val)}`}
-            title={segmentMeaning[val]?.meaning || undefined}
-          />
-        ))}
-      </div>
-    );
-  };
-
-  const formatSectorTime = (ms: number | null) => formatLap(ms);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <label className="text-zinc-400 text-sm">Driver:</label>
-        <select
-          value={selectedDriverId || ''}
-          onChange={(e) => onSelectDriver(e.target.value || null)}
-          className="bg-zinc-900 text-white text-sm px-3 py-2 rounded border border-zinc-800 focus:outline-none"
-        >
-          {driversForSession.map((d) => (
-            <option key={d.driver_id} value={d.driver_id}>
-              {d.driver_number ? `${d.driver_number} - ` : ''}{d.driver_name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-zinc-200">
-          <thead className="text-xs uppercase text-zinc-500">
-            <tr className="border-b border-zinc-800">
-              <th className="py-2 px-2 text-left">Lap</th>
-              <th className="py-2 px-2 text-left">Lap Time</th>
-              <th className="py-2 px-2 text-left">Sector 1</th>
-              <th className="py-2 px-2 text-left">Sector 2</th>
-              <th className="py-2 px-2 text-left">Sector 3</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lapTimesLoading && (
-              <tr>
-                <td colSpan={5} className="py-6 text-center text-zinc-500">Loading lap times…</td>
-              </tr>
-            )}
-            {!lapTimesLoading && driverLapTimes.length === 0 && (
-              <tr>
-                <td colSpan={5} className="py-6 text-center text-zinc-500">No lap times available</td>
-              </tr>
-            )}
-            {!lapTimesLoading && driverLapTimes.map((lap) => (
-              <tr key={`${lap.driver_id}-${lap.lap_number}`} className="border-b border-zinc-900">
-                <td className="py-2 px-2 font-mono text-zinc-400">{lap.lap_number}</td>
-                <td className="py-2 px-2 font-mono text-white">{formatLap(lap.lap_duration_ms)}</td>
-                {[1,2,3].map((sector) => {
-                  const duration = sector === 1 ? lap.duration_s1_ms : sector === 2 ? lap.duration_s2_ms : lap.duration_s3_ms;
-                  const fastest = sector === 1 ? sessionFastest.s1 : sector === 2 ? sessionFastest.s2 : sessionFastest.s3;
-                  const personal = sector === 1 ? driverBest.s1 : sector === 2 ? driverBest.s2 : driverBest.s3;
-                  const segments = sector === 1 ? lap.s1_segments : sector === 2 ? lap.s2_segments : lap.s3_segments;
-                  return (
-                    <td key={sector} className="py-2 px-2">
-                      <div className={`font-mono text-sm ${sectorColor(duration, fastest, personal)}`}>
-                        {formatSectorTime(duration)}
-                      </div>
-                      <div className="mt-2 flex items-center gap-2">
-                        {renderSegments(segments)}
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-interface LapPaceTabProps {
-  sessionId: string | null;
-  lapTimes: LapTimeRow[];
-  lapTimesLoading: boolean;
-  classification: ClassificationData[];
-  selectedDriverId: string | 'ALL' | null;
-  onSelectDriver: (driverId: string | 'ALL' | null) => void;
-}
-
-const LapPaceTab = ({
-  sessionId,
-  lapTimes,
-  lapTimesLoading,
-  classification,
-  selectedDriverId,
-  onSelectDriver,
-}: LapPaceTabProps) => {
-  if (!sessionId) return null;
-
-  const driversForSession = classification.filter(c => c.session_id === sessionId);
-  const selectedDriverIds = selectedDriverId === 'ALL'
-    ? driversForSession.map(d => d.driver_id)
-    : selectedDriverId
-      ? [selectedDriverId]
-      : [];
-
-  const driverLapTimes = lapTimes
-    .filter(l => l.session_id === sessionId && selectedDriverIds.includes(l.driver_id) && l.lap_duration_ms !== null && l.lap_duration_ms !== undefined)
-    .sort((a, b) => a.lap_number - b.lap_number || a.driver_id.localeCompare(b.driver_id));
-
-  const lapNumbers = driverLapTimes.map(l => l.lap_number);
-  const lapDurations = driverLapTimes.map(l => l.lap_duration_ms || 0);
-
-  const minLap = lapNumbers.length ? Math.min(...lapNumbers) : 0;
-  const maxLap = lapNumbers.length ? Math.max(...lapNumbers) : 1;
-  const minTime = lapDurations.length ? Math.min(...lapDurations) : 0;
-  const maxTime = lapDurations.length ? Math.max(...lapDurations) : 1;
-
-  const yMin = minTime * 0.98;
-  const yMax = maxTime * 1.02;
-
-  const width = 900;
-  const height = 360;
-  const margin = { top: 20, right: 20, bottom: 40, left: 60 };
-  const xMax = width - margin.left - margin.right;
-  const yMaxPx = height - margin.top - margin.bottom;
-
-  const xScale = scaleLinear({
-    domain: [minLap || 0, maxLap || 1],
-    range: [0, xMax],
-    nice: true,
-  });
-
-  const yScale = scaleLinear({
-    domain: [yMax, yMin || 0],
-    range: [yMaxPx, 0],
-    nice: true,
-  });
-
-  const formatLapLabel = (ms: number | null | undefined) => {
-    if (ms === null || ms === undefined) return '-';
-    const totalSeconds = ms / 1000;
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toFixed(3).padStart(6, '0')}`;
-  };
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <label className="text-zinc-400 text-sm">Driver:</label>
-        <select
-          value={selectedDriverId || 'ALL'}
-          onChange={(e) => onSelectDriver(e.target.value === 'ALL' ? 'ALL' : (e.target.value || null))}
-          className="bg-zinc-900 text-white text-sm px-3 py-2 rounded border border-zinc-800 focus:outline-none"
-        >
-          <option value="ALL">All Drivers</option>
-          {driversForSession.map((d) => (
-            <option key={d.driver_id} value={d.driver_id}>
-              {d.driver_number ? `${d.driver_number} - ` : ''}{d.driver_name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="bg-zinc-900 rounded-corner p-4 overflow-x-auto">
-        {lapTimesLoading && (
-          <div className="py-6 text-center text-zinc-500">Loading lap pace…</div>
-        )}
-        {!lapTimesLoading && driverLapTimes.length === 0 && (
-          <div className="py-6 text-center text-zinc-500">No lap data available</div>
-        )}
-        {!lapTimesLoading && driverLapTimes.length > 0 && (
-          <svg width={width} height={height} className="min-w-full">
-            <Group left={margin.left} top={margin.top}>
-              <AxisLeft
-                scale={yScale}
-                tickFormat={(val) => formatLapLabel(Number(val))}
-                stroke="#52525b"
-                tickStroke="#52525b"
-                tickLabelProps={() => ({
-                  fill: '#a1a1aa',
-                  fontSize: 10,
-                  fontFamily: 'var(--font-mono)',
-                  textAnchor: 'end',
-                  dx: -6,
-                })}
-              />
-              <AxisBottom
-                top={yMaxPx}
-                scale={xScale}
-                stroke="#52525b"
-                tickStroke="#52525b"
-                tickLabelProps={() => ({
-                  fill: '#a1a1aa',
-                  fontSize: 10,
-                  fontFamily: 'var(--font-mono)',
-                  textAnchor: 'middle',
-                  dy: 12,
-                })}
-              />
-
-              {selectedDriverIds.map((driverId) => {
-                const series = driverLapTimes.filter(d => d.driver_id === driverId);
-                if (!series.length) return null;
-                const strokeColor = series[0]?.color_hex?.startsWith('#') ? series[0].color_hex : '#ffffff';
-                return (
-                  <LinePath
-                    key={driverId}
-                    data={series}
-                    x={(d) => xScale(d.lap_number) ?? 0}
-                    y={(d) => yScale(d.lap_duration_ms || 0) ?? 0}
-                    stroke={strokeColor}
-                    strokeWidth={2}
-                    strokeOpacity={0.9}
-                  />
-                );
-              })}
-            </Group>
-          </svg>
-        )}
-      </div>
-    </div>
-  );
-};
-

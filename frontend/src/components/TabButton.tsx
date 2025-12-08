@@ -29,7 +29,7 @@ export const TabButton = ({
   const getStateClasses = () => {
     if (variant === 'ghost') {
       return active
-        ? 'bg-black text-white border border-zinc-800'
+        ? 'bg-black text-white border border-zinc-700'
         : 'bg-transparent text-zinc-700 hover:bg-zinc-900 hover:text-zinc-200';
     }
     

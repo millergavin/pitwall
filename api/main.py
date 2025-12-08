@@ -758,6 +758,283 @@ def get_drivers_roster(season: int = 2025):
             return cur.fetchall()
 
 
+@app.get("/api/drivers/{driver_id}")
+def get_driver_detail(driver_id: str, season: int = 2025):
+    """
+    Get detailed information about a specific driver for a season.
+    Returns driver info, season stats, championship position, recent results, and season progression.
+    """
+    if not db_pool:
+        raise HTTPException(status_code=500, detail="Database pool not initialized")
+    
+    with db_pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            # Get driver info from latest appearance in the season
+            cur.execute("""
+                SELECT DISTINCT ON (dsp.driver_id)
+                    dsp.driver_id,
+                    dsp.driver_number,
+                    d.first_name,
+                    d.last_name,
+                    d.full_name,
+                    dsp.name_acronym,
+                    d.country_code,
+                    d.headshot_url,
+                    d.headshot_override,
+                    d.wikipedia_id,
+                    d.birthdate,
+                    dsp.team_id as primary_team_id,
+                    dsp.team_name as primary_team_name,
+                    dsp.color_hex,
+                    dsp.team_logo_url,
+                    dsp.display_name as team_display_name
+                FROM gold.driver_standings_progression dsp
+                LEFT JOIN silver.drivers d ON dsp.driver_id = d.driver_id
+                WHERE dsp.driver_id = %s AND dsp.season = %s
+                ORDER BY dsp.driver_id, dsp.round_number DESC
+            """, (driver_id, season))
+            driver_info = cur.fetchone()
+            
+            if not driver_info:
+                raise HTTPException(status_code=404, detail="Driver not found")
+            
+            # Get season stats
+            cur.execute("""
+                SELECT 
+                    COALESCE(SUM(session_points), 0) as total_points,
+                    COUNT(*) FILTER (WHERE finish_position = 1) as wins,
+                    COUNT(*) FILTER (WHERE finish_position IN (1, 2, 3)) as podiums,
+                    COUNT(*) FILTER (WHERE finish_position <= 10) as points_finishes,
+                    COUNT(DISTINCT round_number) as races_entered,
+                    COUNT(*) FILTER (WHERE fastest_lap = TRUE) as fastest_laps
+                FROM gold.driver_standings_progression
+                WHERE driver_id = %s AND season = %s
+            """, (driver_id, season))
+            season_stats = cur.fetchone()
+            
+            # Get championship position (based on final cumulative points)
+            cur.execute("""
+                WITH final_points AS (
+                    SELECT 
+                        driver_id,
+                        MAX(cumulative_points) as final_points
+                    FROM gold.driver_standings_progression
+                    WHERE season = %s
+                    GROUP BY driver_id
+                )
+                SELECT 
+                    ROW_NUMBER() OVER (ORDER BY final_points DESC) as position
+                FROM final_points
+                WHERE driver_id = %s
+            """, (season, driver_id))
+            position_result = cur.fetchone()
+            championship_position = position_result['position'] if position_result else None
+            
+            # Get recent results (last 10 sessions) with grid_position from session_classification
+            cur.execute("""
+                SELECT DISTINCT ON (dsp.round_number, dsp.session_type)
+                    dsp.round_number,
+                    dsp.meeting_short_name,
+                    dsp.session_type::text as session_type,
+                    dsp.finish_position,
+                    sc.grid_position,
+                    dsp.session_points,
+                    dsp.fastest_lap,
+                    COALESCE(sc.status::text, 'finished') as status,
+                    dsp.country_code,
+                    dsp.emoji_flag
+                FROM gold.driver_standings_progression dsp
+                LEFT JOIN gold.session_classification sc 
+                    ON dsp.session_id = sc.session_id 
+                    AND dsp.driver_id = sc.driver_id
+                WHERE dsp.driver_id = %s AND dsp.season = %s
+                ORDER BY dsp.round_number DESC, dsp.session_type DESC
+                LIMIT 10
+            """, (driver_id, season))
+            recent_results = cur.fetchall()
+            
+            # Get season progression (one entry per round with max cumulative points)
+            cur.execute("""
+                SELECT 
+                    round_number,
+                    meeting_short_name,
+                    MAX(cumulative_points) as cumulative_points,
+                    MAX(session_points) as session_points,
+                    MIN(finish_position) FILTER (WHERE finish_position IS NOT NULL) as finish_position,
+                    emoji_flag
+                FROM gold.driver_standings_progression
+                WHERE driver_id = %s AND season = %s
+                GROUP BY round_number, meeting_short_name, emoji_flag
+                ORDER BY round_number
+            """, (driver_id, season))
+            season_progression = cur.fetchall()
+            
+            return {
+                "driver": driver_info,
+                "season_stats": season_stats,
+                "championship_position": championship_position,
+                "recent_results": recent_results,
+                "season_progression": season_progression
+            }
+
+
+@app.get("/api/teams/{team_id}")
+def get_team_detail(team_id: str, season: int = 2025):
+    """
+    Get detailed information about a specific team for a season.
+    Returns team info, season stats, championship position, drivers, recent results, and season progression.
+    """
+    if not db_pool:
+        raise HTTPException(status_code=500, detail="Database pool not initialized")
+    
+    with db_pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            # Get team info from team_branding
+            cur.execute("""
+                SELECT DISTINCT ON (team_id)
+                    team_id,
+                    team_name,
+                    display_name,
+                    color_hex,
+                    logo_url,
+                    car_image_url
+                FROM silver.team_branding
+                WHERE team_id = %s AND season = %s
+                ORDER BY team_id, team_name
+            """, (team_id, season))
+            team_info = cur.fetchone()
+            
+            if not team_info:
+                raise HTTPException(status_code=404, detail="Team not found")
+            
+            # Get season stats - need to check driver results for wins/podiums
+            cur.execute("""
+                WITH team_driver_results AS (
+                    SELECT 
+                        round_number,
+                        session_type,
+                        finish_position,
+                        session_points,
+                        fastest_lap
+                    FROM gold.driver_standings_progression
+                    WHERE team_id = %s AND season = %s
+                ),
+                constructor_points AS (
+                    SELECT 
+                        COALESCE(MAX(cumulative_points), 0) as total_points,
+                        COUNT(DISTINCT round_number) as races_entered
+                    FROM gold.constructor_standings_progression
+                    WHERE team_id = %s AND season = %s
+                )
+                SELECT 
+                    cp.total_points,
+                    COUNT(*) FILTER (WHERE tdr.finish_position = 1 AND tdr.session_type = 'race') as wins,
+                    COUNT(*) FILTER (WHERE tdr.finish_position IN (1, 2, 3)) as podiums,
+                    COUNT(DISTINCT tdr.round_number) FILTER (WHERE tdr.session_points > 0) as points_finishes,
+                    cp.races_entered,
+                    COUNT(*) FILTER (WHERE tdr.fastest_lap = TRUE) as fastest_laps
+                FROM team_driver_results tdr
+                CROSS JOIN constructor_points cp
+                GROUP BY cp.total_points, cp.races_entered
+            """, (team_id, season, team_id, season))
+            season_stats = cur.fetchone()
+            
+            # Get championship position (based on final cumulative points)
+            cur.execute("""
+                WITH final_points AS (
+                    SELECT 
+                        team_id,
+                        MAX(cumulative_points) as final_points
+                    FROM gold.constructor_standings_progression
+                    WHERE season = %s
+                    GROUP BY team_id
+                )
+                SELECT 
+                    ROW_NUMBER() OVER (ORDER BY final_points DESC) as position
+                FROM final_points
+                WHERE team_id = %s
+            """, (season, team_id))
+            position_result = cur.fetchone()
+            championship_position = position_result['position'] if position_result else None
+            
+            # Get current drivers for this team in this season
+            cur.execute("""
+                WITH driver_final_points AS (
+                    SELECT 
+                        dsp.driver_id,
+                        MAX(dsp.cumulative_points) as driver_points
+                    FROM gold.driver_standings_progression dsp
+                    WHERE dsp.team_id = %s AND dsp.season = %s
+                    GROUP BY dsp.driver_id
+                ),
+                driver_latest_info AS (
+                    SELECT DISTINCT ON (dsp.driver_id)
+                        dsp.driver_id,
+                        dsp.driver_number,
+                        d.full_name,
+                        dsp.name_acronym,
+                        d.headshot_url,
+                        d.headshot_override
+                    FROM gold.driver_standings_progression dsp
+                    LEFT JOIN silver.drivers d ON dsp.driver_id = d.driver_id
+                    WHERE dsp.team_id = %s AND dsp.season = %s
+                    ORDER BY dsp.driver_id, dsp.round_number DESC
+                )
+                SELECT 
+                    dli.driver_id,
+                    dli.driver_number,
+                    dli.full_name,
+                    dli.name_acronym,
+                    dli.headshot_url,
+                    dli.headshot_override,
+                    dfp.driver_points
+                FROM driver_latest_info dli
+                LEFT JOIN driver_final_points dfp ON dli.driver_id = dfp.driver_id
+                ORDER BY dli.driver_number
+            """, (team_id, season, team_id, season))
+            drivers = cur.fetchall()
+            
+            # Get recent results (last 10 sessions)
+            cur.execute("""
+                SELECT DISTINCT ON (round_number, session_type)
+                    round_number,
+                    meeting_short_name,
+                    session_type::text as session_type,
+                    session_points,
+                    country_code,
+                    emoji_flag
+                FROM gold.constructor_standings_progression
+                WHERE team_id = %s AND season = %s
+                ORDER BY round_number DESC, session_type DESC
+                LIMIT 10
+            """, (team_id, season))
+            recent_results = cur.fetchall()
+            
+            # Get season progression (one entry per round with max cumulative points)
+            cur.execute("""
+                SELECT 
+                    round_number,
+                    meeting_short_name,
+                    MAX(cumulative_points) as cumulative_points,
+                    MAX(session_points) as session_points,
+                    emoji_flag
+                FROM gold.constructor_standings_progression
+                WHERE team_id = %s AND season = %s
+                GROUP BY round_number, meeting_short_name, emoji_flag
+                ORDER BY round_number
+            """, (team_id, season))
+            season_progression = cur.fetchall()
+            
+            return {
+                "team": team_info,
+                "season_stats": season_stats,
+                "championship_position": championship_position,
+                "drivers": drivers,
+                "recent_results": recent_results,
+                "season_progression": season_progression
+            }
+
+
 # =============================================================================
 # DATABASE UPDATE ENDPOINTS
 # =============================================================================

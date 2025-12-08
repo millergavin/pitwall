@@ -22,7 +22,7 @@ export const TableHeader = ({
 
   return (
     <thead 
-      className={`bg-zinc-950 text-zinc-400 text-xs uppercase tracking-wide ${stickyClasses} ${interactiveClasses} ${className}`}
+      className={`bg-black text-zinc-400 text-xs uppercase tracking-wide ${stickyClasses} ${interactiveClasses} ${className}`}
       onClick={onClick}
       title={title}
     >
