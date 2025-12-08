@@ -382,6 +382,26 @@ def get_lap_chart(session_id: str):
             return cur.fetchall()
 
 
+@app.get("/api/segment-meaning")
+def get_segment_meaning():
+    """Lookup for sector segment values -> meaning/color"""
+    if not db_pool:
+        raise HTTPException(status_code=500, detail="Database pool not initialized")
+    
+    with db_pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute("""
+                SELECT 
+                    segment_value,
+                    color_label,
+                    meaning,
+                    notes
+                FROM silver.segment_meaning
+                ORDER BY segment_value
+            """)
+            return cur.fetchall()
+
+
 @app.get("/api/session-summary")
 def get_session_summary(season: int = None, session_type: str = None):
     """Get session summaries from gold.session_summary"""

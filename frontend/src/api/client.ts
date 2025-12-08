@@ -203,6 +203,28 @@ export const api = {
     return response.json();
   },
 
+  lapTimes: async (sessionId: string, driverId?: string) => {
+    const url = new URL(createApiUrl('/lap-times'));
+    url.searchParams.append('session_id', sessionId);
+    if (driverId) {
+      url.searchParams.append('driver_id', driverId);
+    }
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  segmentMeaning: async () => {
+    const url = createApiUrl('/segment-meaning');
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
   // Database management
   database: {
     status: async () => {
