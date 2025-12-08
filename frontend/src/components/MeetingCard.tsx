@@ -70,8 +70,8 @@ export const MeetingCard = ({ meeting, coverImageUrl, onClick }: MeetingCardProp
         {/* Top section - Round number and flag */}
         <div className="flex justify-between items-start">
           {/* Round number badge */}
-          <div className="bg-f1-red text-white px-3 py-1 rounded text-sm f1-display-bold">
-            ROUND {meeting.round_number}
+          <div className="bg-f1-red text-white px-3 py-1 rounded text-xs f1-display-bold">
+            {meeting.round_number === 0 ? 'TESTING' : `ROUND ${meeting.round_number}`}
           </div>
 
           {/* Flag */}
@@ -89,8 +89,8 @@ export const MeetingCard = ({ meeting, coverImageUrl, onClick }: MeetingCardProp
         {/* Bottom section - Meeting info */}
         <div className="z-10">
           {/* Date range */}
-          <div className="text-zinc-300 text-sm f1-display-regular mb-2">
-            {startDate} - {endDate}
+          <div className="text-white text-base f1-display-bold mb-2 opacity-70">
+            {startDate} – {endDate}
           </div>
           
           {/* Meeting name */}

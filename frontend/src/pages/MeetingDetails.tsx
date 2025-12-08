@@ -5,6 +5,7 @@ import { NavSidebar } from '../components/NavSidebar';
 import { Button } from '../components/Button';
 import { TabButton } from '../components/TabButton';
 import { SessionResultsTable } from '../components/DataTable/SessionResultsTable';
+import { LapChart, type LapChartData } from '../components/LapChart';
 import { FontAwesomeIcon } from '../lib/fontawesome';
 import { 
   faArrowLeft, 
@@ -74,12 +75,16 @@ interface ClassificationData {
   points: number | null;
 }
 
+type DetailTab = 'results' | 'lap-chart';
+
 export const MeetingDetails = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const [meeting, setMeeting] = useState<MeetingData | null>(null);
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [selectedDetailTab, setSelectedDetailTab] = useState<DetailTab>('results');
   const [classification, setClassification] = useState<ClassificationData[]>([]);
+  const [lapChartData, setLapChartData] = useState<LapChartData[]>([]);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -149,6 +154,30 @@ export const MeetingDetails = () => {
 
     fetchClassification();
   }, [selectedSessionId]);
+
+  // Fetch lap chart data when selected session changes (only for race/sprint)
+  useEffect(() => {
+    const fetchLapChart = async () => {
+      if (!selectedSessionId) return;
+      
+      // Check if this is a race or sprint session
+      const session = sessions.find(s => s.session_id === selectedSessionId);
+      if (!session || !['race', 'sprint'].includes(session.session_type)) {
+        setLapChartData([]);
+        return;
+      }
+      
+      try {
+        const data = await api.lapChart(selectedSessionId);
+        setLapChartData(data);
+      } catch (err) {
+        console.error('Failed to load lap chart:', err);
+        setLapChartData([]);
+      }
+    };
+
+    fetchLapChart();
+  }, [selectedSessionId, sessions]);
 
   const getCircuitDisplayName = (): string => {
     if (!meeting) return '';
@@ -277,16 +306,19 @@ export const MeetingDetails = () => {
     >
       <div className="flex h-full gap-4">
         {/* Left Sidebar - Fixed 360px */}
-        <div className="w-[360px] flex-shrink-0 flex flex-col gap-4 overflow-y-auto">
-          {/* Back button */}
-          <Button 
-            variant="text" 
-            size="sm"
-            icon={faArrowLeft}
-            onClick={() => navigate('/grand-prix')}
-          >
-            Back to Grand Prix
-          </Button>
+        <div className="w-[360px] flex-shrink-0 relative flex flex-col gap-4 overflow-y-auto">
+          {/* Back button - positioned absolutely on top */}
+          <div className="absolute top-2 left-2 z-10">
+            <Button 
+              variant="secondary" 
+              size="sm"
+              icon={faArrowLeft}
+              onClick={() => navigate('/grand-prix')}
+              className="[&_*]:drop-shadow-[0_3px_3px_rgba(0,0,0,1)]"
+            >
+              Back to Grand Prix
+            </Button>
+          </div>
 
           {/* Circuit Photo & Meeting Header */}
           <div className="bg-black rounded-corner overflow-hidden">
@@ -476,7 +508,7 @@ export const MeetingDetails = () => {
             {sessions.map((session) => (
               <TabButton
                 key={session.session_id}
-                variant="ghost"
+                variant="default"
                 size="md"
                 active={session.session_id === selectedSessionId}
                 onClick={() => setSelectedSessionId(session.session_id)}
@@ -487,39 +519,84 @@ export const MeetingDetails = () => {
           </div>
 
           {/* Selected Session Results Table */}
-          <div className="flex-1 overflow-y-auto bg-black rounded-corner p-4">
-            {selectedSession && classification.length > 0 ? (
-              <SessionResultsTable
-                results={classification.map(c => ({
-                  driver_id: c.driver_id,
-                  driver_number: c.driver_number,
-                  driver_name: c.driver_name,
-                  name_acronym: c.name_acronym,
-                  team_name: c.team_name,
-                  team_logo_url: c.logo_url || undefined,
-                  team_color: c.color_hex,
-                  headshot_url: c.headshot_url || undefined,
-                  headshot_override: c.headshot_override || undefined,
-                  grid_position: c.grid_position,
-                  finish_position: c.finish_position,
-                  duration_ms: c.duration_ms,
-                  gap_to_leader_ms: c.gap_to_leader_ms,
-                  best_lap_ms: c.best_lap_ms,
-                  quali_lap_ms: c.quali_lap_ms,
-                  points: c.points,
-                  fastest_lap: c.fastest_lap,
-                  status: c.status,
-                }))}
-                sessionType={isRaceOrSprint ? (selectedSession.session_type as 'race' | 'sprint') : 'qualifying'}
-                showPositionChange={isRaceOrSprint}
-                showPoints={isRaceOrSprint}
-                showFastestLap={isRaceOrSprint}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-zinc-500">No results available for this session</p>
-              </div>
-            )}
+          <div className="flex-1 overflow-hidden bg-black rounded-corner flex flex-col">
+            {/* Secondary Tabs */}
+            <div className="flex gap-2 p-4 pb-0">
+              <TabButton
+                variant="ghost"
+                size="sm"
+                active={selectedDetailTab === 'results'}
+                onClick={() => setSelectedDetailTab('results')}
+              >
+                Results
+              </TabButton>
+              {isRaceOrSprint && (
+                <TabButton
+                  variant="ghost"
+                  size="sm"
+                  active={selectedDetailTab === 'lap-chart'}
+                  onClick={() => setSelectedDetailTab('lap-chart')}
+                >
+                  Lap Chart
+                </TabButton>
+              )}
+            </div>
+
+            {/* Tab Content */}
+            <div className="flex-1 overflow-y-auto p-4 pt-4 pb-8">
+              {selectedDetailTab === 'results' && (
+                selectedSession && classification.length > 0 ? (
+                  <SessionResultsTable
+                    results={classification.map(c => ({
+                      driver_id: c.driver_id,
+                      driver_number: c.driver_number,
+                      driver_name: c.driver_name,
+                      name_acronym: c.name_acronym,
+                      team_name: c.team_name,
+                      team_logo_url: c.logo_url || undefined,
+                      team_color: c.color_hex,
+                      headshot_url: c.headshot_url || undefined,
+                      headshot_override: c.headshot_override || undefined,
+                      grid_position: c.grid_position,
+                      finish_position: c.finish_position,
+                      duration_ms: c.duration_ms,
+                      gap_to_leader_ms: c.gap_to_leader_ms,
+                      best_lap_ms: c.best_lap_ms,
+                      quali_lap_ms: c.quali_lap_ms,
+                      points: c.points,
+                      fastest_lap: c.fastest_lap,
+                      status: c.status,
+                    }))}
+                    sessionType={isRaceOrSprint ? (selectedSession.session_type as 'race' | 'sprint') : 'qualifying'}
+                    showPositionChange={isRaceOrSprint}
+                    showPoints={isRaceOrSprint}
+                    showFastestLap={isRaceOrSprint}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-zinc-500">No results available for this session</p>
+                  </div>
+                )
+              )}
+              
+              {selectedDetailTab === 'lap-chart' && (
+                selectedSession && lapChartData.length > 0 ? (
+                  <LapChart
+                    data={lapChartData}
+                    classification={classification.map(c => ({
+                      driver_id: c.driver_id,
+                      grid_position: c.grid_position,
+                      finish_position: c.finish_position,
+                      laps_completed: c.laps_completed,
+                    }))}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full min-h-[400px]">
+                    <p className="text-zinc-500">No lap chart data available for this session</p>
+                  </div>
+                )
+              )}
+            </div>
           </div>
         </div>
       </div>

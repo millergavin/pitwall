@@ -64,15 +64,13 @@ app = FastAPI(
 ALLOWED_ORIGINS = [
     "http://localhost:5174",
     "http://localhost:3000",
-    "https://pitwall.one",
-    "https://www.pitwall.one",
-    os.getenv("FRONTEND_URL", ""),  # Optional additional URL
+    os.getenv("FRONTEND_URL", ""),  # Set this in Railway to your Vercel URL
 ]
-# Also allow any vercel.app subdomain for preview deployments
+# Also allow any vercel.app subdomain
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Allow all Vercel preview deployments
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -102,11 +100,11 @@ def get_drivers(season: int = None):
         with conn.cursor(row_factory=dict_row) as cur:
             if season:
                 cur.execute(
-                    "SELECT * FROM gold.dim_drivers WHERE season = %s ORDER BY full_name",
+                    "SELECT * FROM gold.dim_drivers WHERE season = %s ORDER BY driver_name",
                     (season,)
                 )
             else:
-                cur.execute("SELECT * FROM gold.dim_drivers ORDER BY season DESC, full_name")
+                cur.execute("SELECT * FROM gold.dim_drivers ORDER BY season DESC, driver_name")
             return cur.fetchall()
 
 
@@ -144,6 +142,20 @@ def get_meetings(season: int = None):
             else:
                 cur.execute("SELECT * FROM gold.dim_meetings ORDER BY season DESC, round_number")
             return cur.fetchall()
+
+
+@app.get("/api/seasons")
+def get_seasons():
+    """Get distinct seasons that have meeting data, ordered descending"""
+    if not db_pool:
+        raise HTTPException(status_code=500, detail="Database pool not initialized")
+    
+    with db_pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                "SELECT DISTINCT season FROM gold.dim_meetings ORDER BY season DESC"
+            )
+            return [row['season'] for row in cur.fetchall()]
 
 
 @app.get("/api/circuits")
@@ -329,15 +341,41 @@ def get_session_classification(session_id: str):
                     sc.team_id, sc.team_name, sc.display_name, sc.color_hex, sc.grid_position,
                     sc.finish_position, sc.status::text as status, sc.laps_completed, 
                     sc.duration_ms, sc.gap_to_leader_ms, sc.best_lap_ms, sc.fastest_lap, sc.points,
-                    sc.quali_lap_ms,
-                    dt.logo_url,
-                    dd.headshot_url,
-                    dd.headshot_override
+                    dt.logo_url as team_logo_url,
+                    d.headshot_url,
+                    d.headshot_override
                 FROM gold.session_classification sc
                 LEFT JOIN gold.dim_teams dt ON sc.team_id = dt.team_id AND sc.season = dt.season
-                LEFT JOIN gold.dim_drivers dd ON sc.driver_id = dd.driver_id AND sc.season = dd.season
+                LEFT JOIN silver.drivers d ON sc.driver_id = d.driver_id
                 WHERE sc.session_id = %s
                 ORDER BY sc.finish_position NULLS LAST, sc.driver_name
+            """, (session_id,))
+            return cur.fetchall()
+
+
+@app.get("/api/sessions/{session_id}/lap-chart")
+def get_lap_chart(session_id: str):
+    """Get lap-by-lap position data for a session from gold.lap_intervals"""
+    if not db_pool:
+        raise HTTPException(status_code=500, detail="Database pool not initialized")
+    
+    with db_pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute("""
+                SELECT 
+                    driver_id,
+                    driver_number,
+                    driver_name,
+                    name_acronym,
+                    team_id,
+                    team_name,
+                    display_name,
+                    color_hex,
+                    lap_number,
+                    position
+                FROM gold.lap_intervals
+                WHERE session_id = %s
+                ORDER BY lap_number, position
             """, (session_id,))
             return cur.fetchall()
 
@@ -463,6 +501,10 @@ def get_driver_standings_by_meeting(season: int = 2024):
                 dsp.driver_number,
                 dsp.driver_name,
                 dsp.name_acronym,
+                d.first_name,
+                d.last_name,
+                d.headshot_url,
+                d.headshot_override,
                 dsp.team_id,
                 dsp.team_name,
                 dsp.color_hex,
@@ -470,12 +512,24 @@ def get_driver_standings_by_meeting(season: int = 2024):
             FROM gold.driver_standings_progression dsp
             INNER JOIN driver_meeting_counts dmc ON dsp.driver_id = dmc.driver_id
             LEFT JOIN gold.dim_teams dt ON dsp.team_id = dt.team_id AND dt.season = %s
+            LEFT JOIN silver.drivers d ON dsp.driver_id = d.driver_id
             WHERE dsp.season = %s
             ORDER BY dsp.driver_id, dsp.round_number DESC
         ),
         driver_round_grid AS (
             SELECT 
-                td.*,
+                td.driver_id,
+                td.driver_number,
+                td.driver_name,
+                td.name_acronym,
+                td.first_name,
+                td.last_name,
+                td.headshot_url,
+                td.headshot_override,
+                td.team_id,
+                td.team_name,
+                td.color_hex,
+                td.logo_url,
                 ar.round_number,
                 ar.meeting_name,
                 ar.meeting_short_name,
@@ -507,6 +561,10 @@ def get_driver_standings_by_meeting(season: int = 2024):
             drg.driver_number,
             drg.driver_name,
             drg.name_acronym,
+            drg.first_name,
+            drg.last_name,
+            drg.headshot_url,
+            drg.headshot_override,
             drg.team_id,
             drg.team_name,
             drg.color_hex,
@@ -678,292 +736,6 @@ def get_drivers_roster(season: int = 2025):
             return cur.fetchall()
 
 
-@app.get("/api/drivers/{driver_id:path}")
-def get_driver_detail(driver_id: str, season: int = 2025):
-    """
-    Get detailed information for a specific driver including:
-    - Driver bio info
-    - Season stats (points, wins, podiums)
-    - Recent race results
-    - Season progression
-    """
-    if not db_pool:
-        raise HTTPException(status_code=500, detail="Database pool not initialized")
-    
-    with db_pool.connection() as conn:
-        with conn.cursor(row_factory=dict_row) as cur:
-            # Get driver basic info with team
-            cur.execute("""
-                SELECT DISTINCT ON (d.driver_id)
-                    d.driver_id,
-                    d.first_name,
-                    d.last_name,
-                    d.full_name,
-                    d.name_acronym,
-                    d.country_code,
-                    d.headshot_url,
-                    d.headshot_override,
-                    d.wikipedia_id,
-                    d.birthdate,
-                    dd.driver_number,
-                    dd.primary_team_id,
-                    dd.primary_team_name,
-                    dt.color_hex,
-                    dt.logo_url as team_logo_url,
-                    dt.display_name as team_display_name
-                FROM silver.drivers d
-                LEFT JOIN gold.dim_drivers dd ON d.driver_id = dd.driver_id AND dd.season = %s
-                LEFT JOIN gold.dim_teams dt ON dd.primary_team_id = dt.team_id AND dt.season = %s
-                WHERE d.driver_id = %s
-                ORDER BY d.driver_id, dd.season DESC
-            """, (season, season, driver_id))
-            
-            driver_info = cur.fetchone()
-            if not driver_info:
-                raise HTTPException(status_code=404, detail="Driver not found")
-            
-            # Get season stats
-            cur.execute("""
-                SELECT 
-                    MAX(cumulative_points) as total_points,
-                    COUNT(CASE WHEN finish_position = 1 THEN 1 END) as wins,
-                    COUNT(CASE WHEN finish_position <= 3 THEN 1 END) as podiums,
-                    COUNT(CASE WHEN finish_position <= 10 THEN 1 END) as points_finishes,
-                    COUNT(DISTINCT round_number) as races_entered,
-                    COUNT(CASE WHEN fastest_lap THEN 1 END) as fastest_laps
-                FROM gold.driver_standings_progression
-                WHERE driver_id = %s AND season = %s
-            """, (driver_id, season))
-            
-            season_stats = cur.fetchone()
-            
-            # Get championship position
-            cur.execute("""
-                WITH latest_standings AS (
-                    SELECT 
-                        driver_id,
-                        MAX(cumulative_points) as total_points
-                    FROM gold.driver_standings_progression
-                    WHERE season = %s
-                    GROUP BY driver_id
-                )
-                SELECT 
-                    COUNT(*) + 1 as championship_position
-                FROM latest_standings
-                WHERE total_points > (
-                    SELECT total_points 
-                    FROM latest_standings 
-                    WHERE driver_id = %s
-                )
-            """, (season, driver_id))
-            
-            position_result = cur.fetchone()
-            championship_position = position_result['championship_position'] if position_result else None
-            
-            # Get recent results (last 5 races)
-            cur.execute("""
-                SELECT 
-                    dsp.round_number,
-                    dsp.meeting_short_name,
-                    dsp.session_type::text,
-                    dsp.finish_position,
-                    dsp.session_points,
-                    dsp.fastest_lap,
-                    sc.grid_position,
-                    sc.status::text,
-                    dsp.country_code,
-                    dsp.emoji_flag
-                FROM gold.driver_standings_progression dsp
-                LEFT JOIN gold.session_classification sc 
-                    ON dsp.session_id = sc.session_id 
-                    AND dsp.driver_id = sc.driver_id
-                WHERE dsp.driver_id = %s AND dsp.season = %s
-                ORDER BY dsp.round_number DESC
-                LIMIT 5
-            """, (driver_id, season))
-            
-            recent_results = cur.fetchall()
-            
-            # Get season progression (all rounds)
-            cur.execute("""
-                SELECT 
-                    round_number,
-                    meeting_short_name,
-                    cumulative_points,
-                    session_points,
-                    finish_position,
-                    emoji_flag
-                FROM gold.driver_standings_progression
-                WHERE driver_id = %s AND season = %s
-                ORDER BY round_number
-            """, (driver_id, season))
-            
-            progression = cur.fetchall()
-            
-            return {
-                "driver": driver_info,
-                "season_stats": season_stats,
-                "championship_position": championship_position,
-                "recent_results": recent_results,
-                "season_progression": progression,
-            }
-
-
-@app.get("/api/teams/{team_id:path}")
-def get_team_detail(team_id: str, season: int = 2025):
-    """
-    Get detailed information for a specific team including:
-    - Team info and branding
-    - Season stats (points, wins, podiums)
-    - Current drivers
-    - Recent race results
-    - Season progression
-    """
-    if not db_pool:
-        raise HTTPException(status_code=500, detail="Database pool not initialized")
-    
-    with db_pool.connection() as conn:
-        with conn.cursor(row_factory=dict_row) as cur:
-            # Get team basic info
-            cur.execute("""
-                SELECT 
-                    t.team_id,
-                    dt.team_name,
-                    dt.display_name,
-                    dt.color_hex,
-                    dt.logo_url,
-                    tb.car_image_url
-                FROM silver.teams t
-                LEFT JOIN gold.dim_teams dt ON t.team_id = dt.team_id AND dt.season = %s
-                LEFT JOIN silver.team_branding tb ON t.team_id = tb.team_id AND tb.season = %s
-                WHERE t.team_id = %s
-                LIMIT 1
-            """, (season, season, team_id))
-            
-            team_info = cur.fetchone()
-            if not team_info:
-                raise HTTPException(status_code=404, detail="Team not found")
-            
-            # Get season stats
-            cur.execute("""
-                SELECT 
-                    MAX(cumulative_points) as total_points,
-                    COUNT(DISTINCT round_number) as races_entered
-                FROM gold.constructor_standings_progression
-                WHERE team_id = %s AND season = %s
-            """, (team_id, season))
-            
-            season_stats_base = cur.fetchone()
-            
-            # Get wins, podiums from driver results
-            cur.execute("""
-                SELECT 
-                    COUNT(DISTINCT CASE WHEN sc.finish_position = 1 THEN sc.session_id END) as wins,
-                    COUNT(DISTINCT CASE WHEN sc.finish_position <= 3 THEN sc.session_id END) as podiums,
-                    COUNT(DISTINCT CASE WHEN sc.finish_position <= 10 THEN sc.session_id END) as points_finishes,
-                    COUNT(CASE WHEN sc.fastest_lap THEN 1 END) as fastest_laps
-                FROM gold.session_classification sc
-                WHERE sc.team_id = %s AND sc.season = %s
-            """, (team_id, season))
-            
-            season_stats_detail = cur.fetchone()
-            
-            # Combine the stats
-            season_stats = {
-                "total_points": season_stats_base['total_points'],
-                "wins": season_stats_detail['wins'],
-                "podiums": season_stats_detail['podiums'],
-                "points_finishes": season_stats_detail['points_finishes'],
-                "races_entered": season_stats_base['races_entered'],
-                "fastest_laps": season_stats_detail['fastest_laps'],
-            }
-            
-            # Get championship position
-            cur.execute("""
-                WITH latest_standings AS (
-                    SELECT 
-                        team_id,
-                        MAX(cumulative_points) as total_points
-                    FROM gold.constructor_standings_progression
-                    WHERE season = %s
-                    GROUP BY team_id
-                )
-                SELECT 
-                    COUNT(*) + 1 as championship_position
-                FROM latest_standings
-                WHERE total_points > (
-                    SELECT total_points 
-                    FROM latest_standings 
-                    WHERE team_id = %s
-                )
-            """, (season, team_id))
-            
-            position_result = cur.fetchone()
-            championship_position = position_result['championship_position'] if position_result else None
-            
-            # Get current drivers for the team
-            cur.execute("""
-                SELECT DISTINCT ON (d.driver_id)
-                    d.driver_id,
-                    dd.driver_number,
-                    d.full_name,
-                    d.name_acronym,
-                    d.headshot_url,
-                    d.headshot_override,
-                    MAX(dsp.cumulative_points) as driver_points
-                FROM silver.drivers d
-                INNER JOIN gold.dim_drivers dd ON d.driver_id = dd.driver_id AND dd.season = %s
-                INNER JOIN gold.driver_standings_progression dsp ON d.driver_id = dsp.driver_id AND dsp.season = %s
-                WHERE dd.primary_team_id = %s
-                GROUP BY d.driver_id, dd.driver_number, d.full_name, d.name_acronym, d.headshot_url, d.headshot_override
-                ORDER BY d.driver_id, driver_points DESC
-            """, (season, season, team_id))
-            
-            drivers = cur.fetchall()
-            
-            # Get recent results (last 5 rounds with both drivers)
-            cur.execute("""
-                SELECT DISTINCT ON (csp.round_number, csp.session_type)
-                    csp.round_number,
-                    csp.meeting_short_name,
-                    csp.session_type::text,
-                    csp.session_points,
-                    csp.country_code,
-                    csp.emoji_flag
-                FROM gold.constructor_standings_progression csp
-                WHERE csp.team_id = %s AND csp.season = %s
-                ORDER BY csp.round_number DESC, csp.session_type
-                LIMIT 5
-            """, (team_id, season))
-            
-            recent_results = cur.fetchall()
-            
-            # Get season progression (all rounds)
-            cur.execute("""
-                SELECT DISTINCT ON (round_number)
-                    round_number,
-                    meeting_short_name,
-                    MAX(cumulative_points) as cumulative_points,
-                    MAX(session_points) as session_points,
-                    emoji_flag
-                FROM gold.constructor_standings_progression
-                WHERE team_id = %s AND season = %s
-                GROUP BY round_number, meeting_short_name, emoji_flag
-                ORDER BY round_number
-            """, (team_id, season))
-            
-            progression = cur.fetchall()
-            
-            return {
-                "team": team_info,
-                "season_stats": season_stats,
-                "championship_position": championship_position,
-                "drivers": drivers,
-                "recent_results": recent_results,
-                "season_progression": progression,
-            }
-
-
 # =============================================================================
 # DATABASE UPDATE ENDPOINTS
 # =============================================================================
@@ -1122,6 +894,133 @@ def trigger_database_update(
         "message": "Database update started",
         "status": update_status
     }
+
+
+@app.post("/api/database/start-docker")
+def start_docker_database():
+    """
+    Start the Docker PostgreSQL container if not running.
+    This is a local development helper - won't work in production.
+    """
+    try:
+        # Check if container is running
+        check_result = subprocess.run(
+            ["docker", "ps", "--filter", "name=pitwall_postgres", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if "pitwall_postgres" in check_result.stdout:
+            return {
+                "status": "already_running",
+                "message": "PostgreSQL container is already running"
+            }
+        
+        # Check if container exists but is stopped
+        check_all = subprocess.run(
+            ["docker", "ps", "-a", "--filter", "name=pitwall_postgres", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if "pitwall_postgres" in check_all.stdout:
+            # Container exists, start it
+            start_result = subprocess.run(
+                ["docker", "start", "pitwall_postgres"],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+            if start_result.returncode == 0:
+                return {
+                    "status": "started",
+                    "message": "PostgreSQL container started successfully"
+                }
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to start container: {start_result.stderr}"
+                )
+        else:
+            # Container doesn't exist, need to run docker-compose
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            compose_result = subprocess.run(
+                ["docker-compose", "up", "-d"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                cwd=project_root
+            )
+            if compose_result.returncode == 0:
+                return {
+                    "status": "created",
+                    "message": "PostgreSQL container created and started via docker-compose"
+                }
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to start via docker-compose: {compose_result.stderr}"
+                )
+                
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="Docker command timed out")
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=500,
+            detail="Docker not found. This endpoint only works in local development."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/database/docker-status")
+def get_docker_status():
+    """
+    Check if the Docker PostgreSQL container is running.
+    """
+    try:
+        result = subprocess.run(
+            ["docker", "ps", "--filter", "name=pitwall_postgres", "--format", "{{.Names}}\t{{.Status}}"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if "pitwall_postgres" in result.stdout:
+            # Parse the status
+            lines = result.stdout.strip().split('\n')
+            for line in lines:
+                if "pitwall_postgres" in line:
+                    parts = line.split('\t')
+                    status = parts[1] if len(parts) > 1 else "running"
+                    return {
+                        "running": True,
+                        "container": "pitwall_postgres",
+                        "status": status
+                    }
+        
+        return {
+            "running": False,
+            "container": "pitwall_postgres",
+            "status": "not running"
+        }
+        
+    except FileNotFoundError:
+        return {
+            "running": None,
+            "container": "pitwall_postgres",
+            "status": "docker_not_available",
+            "message": "Docker not found - this may be a production environment"
+        }
+    except Exception as e:
+        return {
+            "running": None,
+            "container": "pitwall_postgres",
+            "status": "error",
+            "message": str(e)
+        }
 
 
 @app.post("/api/database/refresh-gold")

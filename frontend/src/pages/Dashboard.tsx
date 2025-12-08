@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { PageLayout } from '../components/PageLayout';
 import { NavSidebar } from '../components/NavSidebar';
 import { FontAwesomeIcon } from '../lib/fontawesome';
-import { faStopwatch } from '@fortawesome/free-solid-svg-icons';
+import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../api/client';
+import { ChampionshipDriverRow, type ChampionshipDriverData } from '../components/ChampionshipDriverRow';
+import { ChampionshipTeamRow, type ChampionshipTeamData } from '../components/ChampionshipTeamRow';
 
 interface MeetingData {
   meeting_id: string;
@@ -37,6 +38,10 @@ interface ClassificationData {
   driver_name: string;
   name_acronym: string;
   team_name: string;
+  team_logo_url?: string | null;
+  color_hex?: string;
+  headshot_url?: string | null;
+  headshot_override?: string | null;
   grid_position: number | null;
   finish_position: number | null;
   duration_ms: number | null;
@@ -52,6 +57,10 @@ interface StandingsData {
   driver_id?: string;
   driver_name?: string;
   name_acronym?: string;
+  first_name?: string;
+  last_name?: string;
+  headshot_url?: string | null;
+  headshot_override?: string | null;
   team_id?: string;
   team_name?: string;
   display_name?: string;
@@ -62,14 +71,11 @@ interface StandingsData {
 export const Dashboard = () => {
   const navigate = useNavigate();
   const [latestMeeting, setLatestMeeting] = useState<MeetingData | null>(null);
-  const [, setRaceSession] = useState<SessionData | null>(null);
+  const [hasRaceData, setHasRaceData] = useState(false);
   const [topFinishers, setTopFinishers] = useState<ClassificationData[]>([]);
-  const [fastestLapDriver, setFastestLapDriver] = useState<string | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [driverStandings, setDriverStandings] = useState<StandingsData[]>([]);
   const [constructorStandings, setConstructorStandings] = useState<StandingsData[]>([]);
-  const [driversRoster, setDriversRoster] = useState<any[]>([]);
-  const [teamsRoster, setTeamsRoster] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,45 +90,78 @@ export const Dashboard = () => {
         const years = [currentYear, currentYear - 1];
         
         let foundMeeting: MeetingData | null = null;
-        let foundRaceSession: SessionData | null = null;
+        let resultSession: SessionData | null = null;
+        let raceDataFound = false;
         
         for (const year of years) {
           const meetings = await api.meetings(year);
           if (meetings.length > 0) {
-            // Get most recent meeting
+            // Sort meetings by date (most recent first)
             const sortedMeetings = meetings.sort((a: MeetingData, b: MeetingData) => 
               new Date(b.date_start).getTime() - new Date(a.date_start).getTime()
             );
-            foundMeeting = sortedMeetings[0];
             
-            // Fetch sessions for this meeting
-            const sessions = await api.meetingSessions(foundMeeting!.meeting_id);
-            foundRaceSession = sessions.find((s: SessionData) => s.session_type === 'race') || null;
+            // Find the most recent meeting with race/sprint data OR a current meeting
+            for (const meeting of sortedMeetings) {
+              const sessions = await api.meetingSessions(meeting.meeting_id);
+              
+              // Check for race session first, then sprint
+              const raceSession = sessions.find((s: SessionData) => s.session_type === 'race');
+              const sprintSession = sessions.find((s: SessionData) => s.session_type === 'sprint');
+              
+              if (raceSession) {
+                foundMeeting = meeting;
+                resultSession = raceSession;
+                raceDataFound = true;
+                break;
+              } else if (sprintSession) {
+                foundMeeting = meeting;
+                resultSession = sprintSession;
+                raceDataFound = true;
+                break;
+              } else {
+                // Check if this is a current meeting (within date range)
+                const today = new Date();
+                const startDate = new Date(meeting.date_start);
+                const endDate = new Date(meeting.date_end);
+                
+                if (today >= startDate && today <= endDate) {
+                  foundMeeting = meeting;
+                  raceDataFound = false;
+                  break;
+                }
+              }
+            }
             
-            if (foundRaceSession) break;
+            if (foundMeeting) break;
+            
+            // If no current meeting, use the most recent one
+            if (!foundMeeting && sortedMeetings.length > 0) {
+              const recentMeeting = sortedMeetings[0];
+              foundMeeting = recentMeeting;
+              const sessions = await api.meetingSessions(recentMeeting.meeting_id);
+              const raceSession = sessions.find((s: SessionData) => s.session_type === 'race');
+              const sprintSession = sessions.find((s: SessionData) => s.session_type === 'sprint');
+              resultSession = raceSession || sprintSession || null;
+              raceDataFound = !!resultSession;
+            }
           }
         }
         
         setLatestMeeting(foundMeeting);
-        setRaceSession(foundRaceSession);
+        setHasRaceData(raceDataFound);
 
-        // Fetch race results if we have a race session
-        if (foundRaceSession) {
-          const classification = await api.sessionClassification(foundRaceSession.session_id);
+        // Fetch race/sprint results if we have a session
+        if (resultSession) {
+          const classification = await api.sessionClassification(resultSession.session_id);
           const sortedResults = classification
             .filter((c: ClassificationData) => c.finish_position !== null)
             .sort((a: ClassificationData, b: ClassificationData) => 
               (a.finish_position || 999) - (b.finish_position || 999)
             )
-            .slice(0, 10); // Top 10 instead of 3
+            .slice(0, 3); // Top 3 for the simplified view
           
           setTopFinishers(sortedResults);
-          
-          // Find fastest lap driver
-          const fastestLap = classification.find((c: ClassificationData) => c.fastest_lap);
-          if (fastestLap) {
-            setFastestLapDriver(fastestLap.driver_name);
-          }
         }
 
         // Fetch cover image for the meeting
@@ -142,17 +181,13 @@ export const Dashboard = () => {
 
         // Fetch championship standings
         const currentSeason = currentYear;
-        const [drivers, constructors, driversRosterData, teamsRosterData] = await Promise.all([
+        const [drivers, constructors] = await Promise.all([
           api.standings.drivers(currentSeason),
           api.standings.constructors(currentSeason),
-          api.driversRoster(currentSeason),
-          api.teamsRoster(currentSeason),
         ]);
         
         setDriverStandings(drivers);
         setConstructorStandings(constructors);
-        setDriversRoster(driversRosterData);
-        setTeamsRoster(teamsRosterData);
         
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
@@ -169,112 +204,111 @@ export const Dashboard = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const formatDuration = (ms: number | null) => {
-    if (ms === null || ms === undefined) return '-';
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    const milliseconds = ms % 1000;
-
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
-    }
-    return `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+  // Determine if the meeting is "current" (within date range AND no race data)
+  const isMeetingCurrent = (meeting: MeetingData | null, hasRace: boolean): boolean => {
+    if (!meeting) return false;
+    const today = new Date();
+    const startDate = new Date(meeting.date_start);
+    const endDate = new Date(meeting.date_end);
+    return today >= startDate && today <= endDate && !hasRace;
   };
 
-  const formatGap = (gapMs: number | null) => {
-    if (gapMs === null || gapMs === undefined) return '-';
-    const totalSeconds = gapMs / 1000;
-    return `+${totalSeconds.toFixed(3)}s`;
+  // Helper component for driver avatar with top-aligned image and outside stroke
+  const DashboardDriverAvatar = ({ 
+    headshotUrl, 
+    driverName, 
+    nameAcronym, 
+    teamColor 
+  }: { 
+    headshotUrl: string | null | undefined; 
+    driverName: string; 
+    nameAcronym?: string;
+    teamColor: string;
+  }) => {
+    const [imageError, setImageError] = useState(false);
+    
+    return (
+      <div className="relative w-12 h-12 rounded-full" style={{ backgroundColor: teamColor }}>
+        {/* Halftone overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-30 rounded-full"
+          style={{
+            backgroundImage: 'url(/assets/textures/halftone.webp)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            mixBlendMode: 'multiply',
+          }}
+        />
+        
+        {/* Driver image - top-aligned */}
+        {headshotUrl && !imageError ? (
+          <img
+            src={headshotUrl}
+            alt={driverName}
+            className="w-full h-full object-cover object-top rounded-full"
+            onError={() => setImageError(true)}
+            style={{
+              objectPosition: 'center top',
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-white/40 f1-display-bold text-lg">
+              {nameAcronym || driverName.charAt(0)}
+            </span>
+          </div>
+        )}
+        
+        {/* Outside stroke */}
+        <div className="absolute -inset-0.5 rounded-full border border-white/20 pointer-events-none" />
+      </div>
+    );
   };
 
-  // Get top 10 drivers with their last 5 rounds
-  const getTop10DriversWithSparkline = () => {
+  // Get top 3 drivers for championship rows
+  const getTop3Drivers = (): ChampionshipDriverData[] => {
     if (!driverStandings.length) return [];
     
     const latestRound = Math.max(...driverStandings.map(d => d.round_number));
     const latestStandings = driverStandings
       .filter(d => d.round_number === latestRound)
       .sort((a, b) => b.cumulative_points - a.cumulative_points)
-      .slice(0, 10);
+      .slice(0, 3);
     
-    const leaderPoints = latestStandings[0]?.cumulative_points || 0;
-    
-    return latestStandings.map(driver => {
-      const driverHistory = driverStandings
-        .filter(d => d.driver_id === driver.driver_id)
-        .sort((a, b) => a.round_number - b.round_number)
-        .slice(-5);
-      
-      return {
-        ...driver,
-        deltaFromLeader: leaderPoints - driver.cumulative_points,
-        history: driverHistory,
-      };
-    });
+    return latestStandings.map(driver => ({
+      driver_id: driver.driver_id || '',
+      driver_name: driver.driver_name || '',
+      first_name: driver.first_name,
+      last_name: driver.last_name,
+      name_acronym: driver.name_acronym,
+      headshot_url: driver.headshot_url,
+      headshot_override: driver.headshot_override,
+      team_id: driver.team_id,
+      color_hex: driver.color_hex,
+      cumulative_points: driver.cumulative_points,
+    }));
   };
 
-  // Get top 10 constructors with their last 5 rounds
-  const getTop10ConstructorsWithSparkline = () => {
+  // Get top 3 constructors for championship rows
+  const getTop3Constructors = (): ChampionshipTeamData[] => {
     if (!constructorStandings.length) return [];
     
     const latestRound = Math.max(...constructorStandings.map(d => d.round_number));
     const latestStandings = constructorStandings
       .filter(d => d.round_number === latestRound)
       .sort((a, b) => b.cumulative_points - a.cumulative_points)
-      .slice(0, 10);
+      .slice(0, 3);
     
-    const leaderPoints = latestStandings[0]?.cumulative_points || 0;
-    
-    return latestStandings.map(team => {
-      const teamHistory = constructorStandings
-        .filter(d => d.team_id === team.team_id)
-        .sort((a, b) => a.round_number - b.round_number)
-        .slice(-5);
-      
-      return {
-        ...team,
-        deltaFromLeader: leaderPoints - team.cumulative_points,
-        history: teamHistory,
-      };
-    });
+    return latestStandings.map(team => ({
+      team_id: team.team_id || '',
+      team_name: team.team_name || '',
+      display_name: team.display_name,
+      color_hex: team.color_hex,
+      logo_url: team.logo_url,
+      cumulative_points: team.cumulative_points,
+    }));
   };
 
-  const MiniSparkline = ({ data, color }: { data: StandingsData[]; color: string }) => {
-    if (!data.length) return null;
-    
-    const points = data.map(d => d.cumulative_points);
-    const max = Math.max(...points);
-    const min = Math.min(...points);
-    const range = max - min || 1;
-    
-    const width = 60;
-    const height = 24;
-    const padding = 2;
-    
-    const normalizedPoints = points.map((p, i) => ({
-      x: padding + (i * (width - 2 * padding) / (points.length - 1 || 1)),
-      y: height - padding - ((p - min) / range) * (height - 2 * padding),
-    }));
-    
-    const pathData = normalizedPoints
-      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-      .join(' ');
-    
-    return (
-      <svg width={width} height={height} className="inline-block">
-        <path
-          d={pathData}
-          fill="none"
-          stroke={color}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  };
 
   if (loading) {
     return (
@@ -296,349 +330,233 @@ export const Dashboard = () => {
     );
   }
 
-  const top10Drivers = getTop10DriversWithSparkline();
-  const top10Constructors = getTop10ConstructorsWithSparkline();
+  const top3Drivers = getTop3Drivers();
+  const top3Constructors = getTop3Constructors();
+  const currentYear = new Date().getFullYear();
 
   return (
     <PageLayout pageTitle="Dashboard" sidebar={<NavSidebar />}>
-      <div className="flex flex-col h-full">
-        {/* Championship Snapshots - 3 equal columns on desktop, stack on mobile */}
-        <motion.div 
-          className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: {
-                staggerChildren: 0.1,
-              },
-            },
-          }}
-        >
+      <div className="flex flex-col h-240">
+        {/* Championship Snapshots - 3 equal columns */}
+        <div className="grid grid-cols-3 gap-6 flex-1 min-h-0">
           {/* Latest Meeting - Column 1 */}
           {latestMeeting && (
-            <motion.div 
-              className="flex flex-col min-h-[500px] lg:h-full"
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0 },
-              }}
-            >
-              <motion.div
+            <div className="flex flex-col h-full">
+              <div
                 onClick={() => navigate(`/grand-prix/${latestMeeting.meeting_id}`)}
-                className="relative overflow-hidden rounded-corner cursor-pointer bg-black h-full flex flex-col"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="relative overflow-hidden rounded-corner cursor-pointer group transition-transform hover:scale-[1.01] active:scale-[0.99] bg-black flex flex-col"
               >
-                {/* Cover image */}
-                {coverImageUrl ? (
-                  <div className="absolute inset-0">
-                    <img
-                      src={coverImageUrl}
-                      alt={latestMeeting.circuit_name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 80%, rgba(0,0,0,0.1) 100%)',
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 bg-black" />
-                )}
+                {/* Header Section - Circuit image with gradient */}
+                <div className="relative flex-shrink-0" style={{ aspectRatio: '16/9' }}>
+                  {coverImageUrl ? (
+                    <>
+                      <img
+                        src={coverImageUrl}
+                        alt={latestMeeting.circuit_name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <div className="w-full h-full bg-black" />
+                  )}
 
-                {/* Content */}
-                <div className="relative h-full flex flex-col justify-between p-6">
-                  {/* Top section */}
-                  <div className="flex justify-between items-start">
-                    <div className="bg-f1-red text-white px-3 py-1 rounded text-sm f1-display-bold">
-                      LATEST GRAND PRIX
+                  {/* Content */}
+                  <div className="absolute inset-0 flex flex-col p-6">
+                    {/* Badge */}
+                    <div className="bg-f1-red text-white px-3 py-1 rounded text-sm f1-display-bold w-fit">
+                      {isMeetingCurrent(latestMeeting, hasRaceData) ? 'CURRENT' : 'LATEST'}
                     </div>
-                    {latestMeeting.flag_url && (
-                      <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg">
-                        <img
-                          src={latestMeeting.flag_url}
-                          alt={latestMeeting.country_name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Bottom section */}
-                  <div className="z-10 flex-1 flex flex-col justify-end overflow-auto">
-                    <div className="text-zinc-300 text-sm f1-display-regular mb-2">
-                      {formatDate(latestMeeting.date_start)} - {formatDate(latestMeeting.date_end)}
+                    {/* Spacer */}
+                    <div className="flex-1" />
+
+                    {/* Meeting Info - Bottom aligned */}
+                    <div className="z-10">
+                      {/* Round number - sans serif, aligned with meeting name */}
+                      <div 
+                        className="text-zinc-400 text-base font-sans font-semibold mb-1" 
+                        style={{ 
+                          textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
+                          marginLeft: latestMeeting.flag_url ? '48px' : '0'
+                        }}
+                      >
+                        ROUND {latestMeeting.round_number}
+                      </div>
+                      
+                      {/* Meeting name with flag */}
+                      <div className="flex items-center gap-3 mb-2">
+                        {latestMeeting.flag_url && (
+                          <div className="w-10 h-10 rounded-full overflow-hidden shadow-lg flex-shrink-0">
+                            <img
+                              src={latestMeeting.flag_url}
+                              alt={latestMeeting.country_name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <h2
+                          className="text-white f1-display-bold text-3xl leading-tight"
+                          style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)' }}
+                        >
+                          {latestMeeting.meeting_short_name}
+                        </h2>
+                      </div>
+                      
+                      {/* Dates - sans serif, aligned with meeting name */}
+                      <div 
+                        className="text-zinc-400 text-base font-sans font-semibold" 
+                        style={{ 
+                          textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
+                          marginLeft: latestMeeting.flag_url ? '48px' : '0'
+                        }}
+                      >
+                        {formatDate(latestMeeting.date_start)} – {formatDate(latestMeeting.date_end)}
+                      </div>
                     </div>
-                    <h2
-                      className="text-white f1-display-bold text-3xl leading-tight uppercase mb-3"
-                      style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)' }}
-                    >
-                      {latestMeeting.season} {latestMeeting.meeting_short_name}
-                    </h2>
-
-                    {/* Race Results Summary */}
-                    {topFinishers.length > 0 && (
-                      <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3 lg:p-6 space-y-4 lg:space-y-8 max-h-[80%] overflow-auto">
-                        {topFinishers.map((finisher, idx) => {
-                          const positionChange = finisher.grid_position && finisher.finish_position
-                            ? finisher.grid_position - finisher.finish_position
-                            : null;
-                          const isFastestLap = finisher.driver_name === fastestLapDriver;
-                          
-                          return (
-                            <div key={finisher.driver_id} className="flex items-center justify-between gap-2 lg:gap-3">
-                              <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0 min-w-0" style={{ maxWidth: '50%' }}>
-                                <div className="text-white f1-display-bold text-sm lg:text-base w-6 lg:w-8 flex-shrink-0">
-                                  {idx + 1}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-white f1-display-bold text-xs lg:text-sm truncate">
-                                    {finisher.driver_name}
-                                  </div>
-                                  <div className="text-zinc-400 text-[9px] lg:text-[10px] f1-display-regular truncate">
-                                    {finisher.team_name}
-                                  </div>
-                                </div>
-                                {isFastestLap && (
-                                  <div className="w-4 h-4 lg:w-5 lg:h-5 bg-purple-600 rounded flex items-center justify-center flex-shrink-0 ml-1">
-                                    <FontAwesomeIcon icon={faStopwatch} className="text-white text-[8px] lg:text-[10px]" />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
-                                {/* Grid position and change */}
-                                {finisher.grid_position && (
-                                  <div className="text-center min-w-[40px] lg:min-w-[48px]">
-                                    <div className="text-zinc-400 text-[9px] lg:text-[10px] f1-display-regular">
-                                      P{finisher.grid_position}
-                                    </div>
-                                    {positionChange !== null && positionChange !== 0 && (
-                                      <div className={`text-[9px] lg:text-[10px] f1-display-bold ${positionChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                        {positionChange > 0 ? `+${positionChange}` : positionChange}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                {/* Time */}
-                                <div className="text-right min-w-16 lg:min-w-24">
-                                  <div className="text-white f1-display-regular text-[10px] lg:text-xs">
-                                    {idx === 0 ? formatDuration(finisher.duration_ms) : formatGap(finisher.gap_to_leader_ms)}
-                                  </div>
-                                </div>
-                                {/* Points */}
-                                {finisher.points !== null && finisher.points > 0 && (
-                                  <div className="text-white f1-display-regular text-[10px] lg:text-xs min-w-12 lg:min-w-16 text-right">
-                                    +{finisher.points}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
                   </div>
                 </div>
+
+                {/* Table Section - Separate black background */}
+                {topFinishers.length > 0 && (
+                  <div className="bg-black flex-shrink-0 flex flex-col py-2 gap-2">
+                    {topFinishers.map((finisher, idx) => {
+                      const positionChange = finisher.grid_position && finisher.finish_position
+                        ? finisher.grid_position - finisher.finish_position
+                        : null;
+                      
+                      // Ensure color_hex has # prefix
+                      const teamColor = finisher.color_hex?.startsWith('#') 
+                        ? finisher.color_hex 
+                        : `#${finisher.color_hex || '666'}`;
+                      
+                      const headshotUrl = finisher.headshot_override || finisher.headshot_url;
+                      
+                      return (
+                        <div 
+                          key={finisher.driver_id} 
+                          className="flex items-center py-3 px-6"
+                        >
+                          {/* Position - fixed width to align with flag above */}
+                          <div className="w-10 flex-shrink-0 flex items-center justify-center">
+                            <span className="text-white f1-display-bold text-xl">
+                              {idx + 1}
+                            </span>
+                          </div>
+                          
+                          {/* Driver Avatar - top-aligned with outside stroke */}
+                          <div className="flex-shrink-0 ml-3">
+                            <DashboardDriverAvatar
+                              headshotUrl={headshotUrl}
+                              driverName={finisher.driver_name}
+                              nameAcronym={finisher.name_acronym}
+                              teamColor={teamColor}
+                            />
+                          </div>
+                          
+                          {/* Team Logo + Driver Name */}
+                          <div className="flex items-center gap-2 ml-3 flex-1 min-w-0">
+                            {finisher.team_logo_url && (
+                              <img 
+                                src={finisher.team_logo_url} 
+                                alt={finisher.team_name}
+                                className="w-5 h-5 object-contain flex-shrink-0"
+                              />
+                            )}
+                            <span className="text-white f1-display-regular text-base truncate">
+                              {finisher.driver_name.split(' ')[0]}{' '}
+                              <span className="f1-display-bold uppercase">
+                                {finisher.driver_name.split(' ').slice(1).join(' ')}
+                              </span>
+                            </span>
+                          </div>
+                          
+                          {/* Position Change - centered in space */}
+                          <div className="flex-1 flex items-center justify-center">
+                            {positionChange !== null && positionChange !== 0 ? (
+                              <div className="flex items-center gap-1">
+                                <FontAwesomeIcon 
+                                  icon={positionChange > 0 ? faChevronUp : faChevronDown} 
+                                  className={`text-xs ${positionChange > 0 ? 'text-green-400' : 'text-red-400'}`}
+                                />
+                                <span className={`text-sm font-bold ${positionChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {Math.abs(positionChange)}
+                                </span>
+                              </div>
+                            ) : null}
+                          </div>
+                          
+                          {/* Points Earned - right-aligned */}
+                          <div className="flex-shrink-0 w-20 text-right">
+                            {finisher.points !== null && finisher.points > 0 && (
+                              <span className="text-zinc-500 font-mono font-semibold text-sm">
+                                +{finisher.points} pts
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Hover effect */}
                 <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none" />
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           )}
 
           {/* Driver Championship - Column 2 */}
-          <motion.div 
-            onClick={() => navigate('/championship?type=drivers')}
-            className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden cursor-pointer"
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 },
-            }}
-            whileHover={{ y: -4 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          >
-            <div className="mb-4">
-              <h2 className="text-white f1-display-bold text-xl">
-                Driver Championship
+          <div className="flex flex-col h-full">
+            <div
+              onClick={() => navigate('/championship?tab=drivers')}
+              className="relative bg-black rounded-corner cursor-pointer group transition-all hover:scale-[1.01] active:scale-[0.99] flex flex-col p-6 flex-shrink-0"
+            >
+              <h2 className="text-white f1-display-bold text-xl mb-4 uppercase">
+                {currentYear} Driver Standings
               </h2>
-            </div>
-            
-            {/* Top 3 Drivers with Images */}
-            {top10Drivers.length >= 3 && (
-              <div className="mb-4">
-                <div className="grid grid-cols-3 gap-2">
-                  {top10Drivers.slice(0, 3).map((driver, idx) => {
-                    const driverData = driversRoster.find((d: any) => d.driver_id === driver.driver_id);
-                    const headshot = driverData?.headshot_override || driverData?.headshot_url;
-                    
-                    return (
-                      <div
-                        key={driver.driver_id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/drivers/${driver.driver_id}`);
-                        }}
-                        className="relative aspect-[3/4] rounded-corner overflow-hidden cursor-pointer group"
-                        style={{ backgroundColor: `#${driver.color_hex}` }}
-                      >
-                        {headshot && (
-                          <img
-                            src={headshot}
-                            alt={driver.driver_name || ''}
-                            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                          />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-2">
-                          <div className="text-white f1-display-bold text-2xl leading-none mb-0.5">
-                            P{idx + 1}
-                          </div>
-                          <div className="text-white text-[10px] f1-display-regular leading-tight">
-                            {driver.name_acronym}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-3 overflow-auto flex-1">
-              {top10Drivers.map((driver, idx) => (
-                <div
-                  key={driver.driver_id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/drivers/${driver.driver_id}`);
-                  }}
-                  className="flex items-center justify-between p-3 rounded cursor-pointer hover:bg-zinc-900 transition-colors"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="text-zinc-400 f1-display-bold text-sm w-6">
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-white f1-display-bold text-base">
-                        {driver.driver_name}
-                      </div>
-                      <div className="text-zinc-500 text-xs f1-display-regular">
-                        {driver.cumulative_points} pts
-                        {driver.deltaFromLeader > 0 && (
-                          <span className="ml-2">(-{driver.deltaFromLeader})</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <MiniSparkline 
-                    data={driver.history} 
-                    color={`#${driver.color_hex}`}
+              <div className="space-y-3">
+                {top3Drivers.map((driver, idx) => (
+                  <ChampionshipDriverRow
+                    key={driver.driver_id}
+                    position={idx + 1}
+                    driver={driver}
                   />
-                </div>
-              ))}
+                ))}
+              </div>
+              {/* Hover effect */}
+              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none rounded-corner" />
             </div>
-          </motion.div>
+          </div>
 
           {/* Constructor Championship - Column 3 */}
-          <motion.div 
-            onClick={() => navigate('/championship?type=constructors')}
-            className="bg-black rounded-corner p-6 flex flex-col h-full overflow-hidden cursor-pointer"
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 },
-            }}
-            whileHover={{ y: -4 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          >
-            <div className="mb-4">
-              <h2 className="text-white f1-display-bold text-xl">
-                Constructor Championship
+          <div className="flex flex-col h-full">
+            <div
+              onClick={() => navigate('/championship?tab=constructors')}
+              className="relative bg-black rounded-corner cursor-pointer group transition-all hover:scale-[1.01] active:scale-[0.99] flex flex-col p-6 flex-shrink-0"
+            >
+              <h2 className="text-white f1-display-bold text-xl mb-4 uppercase">
+                {currentYear} Team Standings
               </h2>
-            </div>
-            
-            {/* Top 3 Teams with Car Images */}
-            {top10Constructors.length >= 3 && (
-              <div className="mb-4">
-                <div className="grid grid-cols-3 gap-2">
-                  {top10Constructors.slice(0, 3).map((team, idx) => {
-                    const teamData = teamsRoster.find((t: any) => t.team_id === team.team_id);
-                    const carImage = teamData?.car_image_url;
-                    
-                    return (
-                      <div
-                        key={team.team_id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate('/championship?type=constructors');
-                        }}
-                        className="relative aspect-[3/4] rounded-corner overflow-hidden cursor-pointer group"
-                        style={{ backgroundColor: `#${team.color_hex}` }}
-                      >
-                        {carImage && (
-                          <img
-                            src={carImage}
-                            alt={team.team_name || ''}
-                            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                          />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-2">
-                          <div className="text-white f1-display-bold text-2xl leading-none mb-0.5">
-                            P{idx + 1}
-                          </div>
-                          {team.logo_url && (
-                            <img src={team.logo_url} alt={team.team_name} className="w-8 h-8 object-contain" />
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-3 overflow-auto flex-1">
-              {top10Constructors.map((team, idx) => (
-                <div
-                  key={team.team_id}
-                  className="flex items-center justify-between p-3 rounded"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="text-zinc-400 f1-display-bold text-sm w-6">
-                      {idx + 1}
-                    </div>
-                    <div className="flex items-center gap-2 flex-1">
-                      {team.logo_url && (
-                        <img src={team.logo_url} alt={team.team_name} className="w-5 h-5 object-contain" />
-                      )}
-                      <div className="flex-1">
-                        <div className="text-white f1-display-bold text-base">
-                          {team.display_name || team.team_name}
-                        </div>
-                        <div className="text-zinc-500 text-xs f1-display-regular">
-                          {team.cumulative_points} pts
-                          {team.deltaFromLeader > 0 && (
-                            <span className="ml-2">(-{team.deltaFromLeader})</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <MiniSparkline 
-                    data={team.history} 
-                    color={`#${team.color_hex}`}
+              <div className="space-y-3">
+                {top3Constructors.map((team, idx) => (
+                  <ChampionshipTeamRow
+                    key={team.team_id}
+                    position={idx + 1}
+                    team={team}
                   />
-                </div>
-              ))}
+                ))}
+              </div>
+              {/* Hover effect */}
+              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none rounded-corner" />
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </PageLayout>
   );

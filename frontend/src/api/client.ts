@@ -124,6 +124,15 @@ export const api = {
     return response.json();
   },
 
+  seasons: async (): Promise<number[]> => {
+    const url = new URL(`${API_BASE_URL}/seasons`, window.location.origin);
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
   meeting: async (meetingId: string) => {
     const url = new URL(`${API_BASE_URL}/meetings/${meetingId}`, window.location.origin);
     const response = await fetch(url.toString());
@@ -160,6 +169,15 @@ export const api = {
     return response.json();
   },
 
+  lapChart: async (sessionId: string) => {
+    const url = new URL(`${API_BASE_URL}/sessions/${sessionId}/lap-chart`, window.location.origin);
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
   // Database management
   database: {
     status: async () => {
@@ -186,6 +204,24 @@ export const api = {
 
     refreshGold: async () => {
       const url = new URL(`${API_BASE_URL}/database/refresh-gold`, window.location.origin);
+      const response = await fetch(url.toString(), { method: 'POST' });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+
+    dockerStatus: async () => {
+      const url = new URL(`${API_BASE_URL}/database/docker-status`, window.location.origin);
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+
+    startDocker: async () => {
+      const url = new URL(`${API_BASE_URL}/database/start-docker`, window.location.origin);
       const response = await fetch(url.toString(), { method: 'POST' });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

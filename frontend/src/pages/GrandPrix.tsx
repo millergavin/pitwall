@@ -1,20 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageLayout } from '../components/PageLayout';
 import { NavSidebar } from '../components/NavSidebar';
 import { MeetingCard, type MeetingCardData } from '../components/MeetingCard';
 import { api } from '../api/client';
+import { FontAwesomeIcon } from '../lib/fontawesome';
+import { faArrowDown, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 
 export const GrandPrix = () => {
   const [meetings, setMeetings] = useState<MeetingCardData[]>([]);
   const [coverImagesMap, setCoverImagesMap] = useState<Record<string, string>>({});
+  const [availableSeasons, setAvailableSeasons] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSeason, setSelectedSeason] = useState(2025);
+  const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
+  const [sortAscending, setSortAscending] = useState(true);
   const navigate = useNavigate();
 
-  // Fetch meetings and cover images
+  // Sort meetings by round number
+  const sortedMeetings = useMemo(() => {
+    return [...meetings].sort((a, b) => {
+      return sortAscending 
+        ? a.round_number - b.round_number 
+        : b.round_number - a.round_number;
+    });
+  }, [meetings, sortAscending]);
+
+  // Fetch available seasons on mount
   useEffect(() => {
+    const fetchSeasons = async () => {
+      try {
+        const seasons = await api.seasons();
+        setAvailableSeasons(seasons);
+        
+        if (seasons.length > 0 && selectedSeason === null) {
+          const currentYear = new Date().getFullYear();
+          // Default to current year if available, otherwise fall back to most recent
+          if (seasons.includes(currentYear)) {
+            setSelectedSeason(currentYear);
+          } else {
+            setSelectedSeason(seasons[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch seasons:', err);
+        // Fallback to current year if seasons fetch fails
+        setSelectedSeason(new Date().getFullYear());
+      }
+    };
+    fetchSeasons();
+  }, []);
+
+  // Fetch meetings and cover images when season changes
+  useEffect(() => {
+    if (selectedSeason === null) return;
+    
     const fetchData = async () => {
       setLoading(true);
       setError(null);
@@ -59,20 +99,34 @@ export const GrandPrix = () => {
   return (
     <PageLayout pageTitle="Grand Prix" sidebar={<NavSidebar />}>
       <div className="flex flex-col h-full">
-        {/* Season selector */}
+        {/* Season selector and sort control */}
         <div className="mb-6 flex items-center gap-4">
           <label className="text-white f1-display-regular text-lg">Season:</label>
           <select
-            value={selectedSeason}
+            value={selectedSeason ?? ''}
             onChange={(e) => setSelectedSeason(Number(e.target.value))}
             className="bg-zinc-800 text-white px-4 py-2 rounded-corner f1-display-regular focus:outline-none focus:ring-2 focus:ring-f1-red"
+            disabled={availableSeasons.length === 0}
           >
-            {[2025, 2024, 2023, 2022, 2021, 2020].map((year) => (
+            {availableSeasons.map((year) => (
               <option key={year} value={year}>
                 {year}
               </option>
             ))}
           </select>
+          
+          {/* Sort toggle button */}
+          <button
+            onClick={() => setSortAscending(!sortAscending)}
+            className="flex items-center gap-2 bg-zinc-800 text-white px-4 py-2 rounded-corner f1-display-regular hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-f1-red"
+            title={sortAscending ? 'Sort by round (ascending)' : 'Sort by round (descending)'}
+          >
+            <span className="text-sm uppercase">Sort</span>
+            <FontAwesomeIcon 
+              icon={sortAscending ? faArrowDown : faArrowUp} 
+              className="text-sm"
+            />
+          </button>
         </div>
 
         {/* Content */}
@@ -87,7 +141,7 @@ export const GrandPrix = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
-              {meetings.map((meeting) => (
+              {sortedMeetings.map((meeting) => (
                 <MeetingCard
                   key={meeting.meeting_id}
                   meeting={meeting}

@@ -70,6 +70,9 @@ export const DriverAvatar = ({
           alt={driverName}
           className="w-full h-full object-cover object-top relative z-10"
           onError={() => setImageError(true)}
+          style={{
+            objectPosition: 'center top',
+          }}
         />
       ) : (
         // Fallback to user silhouette icon
@@ -82,7 +85,7 @@ export const DriverAvatar = ({
       )}
 
       {/* Subtle border overlay */}
-      <div className="absolute inset-0 rounded-full ring-1 ring-white ring-opacity-10 pointer-events-none" />
+      <div className="absolute inset-0 rounded-full ring-0 ring-inset ring-white ring-opacity-10 pointer-events-none" />
     </div>
   );
 };
