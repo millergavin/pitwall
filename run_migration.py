@@ -30,15 +30,33 @@ def run_migration(script_path: str):
         with open(script_path, 'r') as f:
             sql = f.read()
         
+        # Split SQL by semicolons to execute in chunks
+        statements = [s.strip() for s in sql.split(';') if s.strip() and not s.strip().startswith('--')]
+        
         conn = get_db_connection()
+        conn.autocommit = True  # Enable autocommit for DDL statements
+        
+        print(f"Executing {len(statements)} SQL statements...")
+        
         with conn.cursor() as cur:
-            cur.execute(sql)
-            conn.commit()
+            for i, statement in enumerate(statements, 1):
+                if not statement:
+                    continue
+                print(f"Executing statement {i}/{len(statements)}...")
+                try:
+                    cur.execute(statement)
+                    print(f"✓ Statement {i} completed")
+                except Exception as e:
+                    print(f"✗ Error in statement {i}: {e}")
+                    print(f"Statement: {statement[:200]}...")
+                    raise
         
         print(f"Successfully executed migration: {script_path}")
         conn.close()
     except Exception as e:
         print(f"Error executing migration: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == '__main__':

@@ -164,11 +164,14 @@ const LapTimesTab = ({
 
   const segmentColorClass = (value: number | null | undefined) => {
     if (value === null || value === undefined) return 'bg-zinc-800';
-    const meaning = segmentMeaning[value];
+    // Ensure value is a number (handle string conversion from JSON)
+    const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    if (isNaN(numValue)) return 'bg-zinc-800';
+    const meaning = segmentMeaning[numValue];
     const label = meaning?.color_label?.toLowerCase() || '';
     if (label.includes('purple')) return 'bg-purple-500';
     if (label.includes('green')) return 'bg-green-500';
-    if (label.includes('yellow')) return 'bg-yellow-500';
+    if (label.includes('yellow')) return 'bg-yellow-400';
     return 'bg-zinc-800';
   };
 
@@ -178,13 +181,16 @@ const LapTimesTab = ({
     }
     return (
       <div className="flex gap-1">
-        {segments.map((val, idx) => (
-          <div
-            key={idx}
-            className={`h-4 w-3 rounded ${segmentColorClass(val)}`}
-            title={segmentMeaning[val]?.meaning || undefined}
-          />
-        ))}
+        {segments.map((val, idx) => {
+          const numVal = typeof val === 'string' ? parseInt(val, 10) : val;
+          return (
+            <div
+              key={idx}
+              className={`h-4 w-2 rounded-[2px] ${segmentColorClass(val)}`}
+              title={segmentMeaning[numVal]?.meaning || undefined}
+            />
+          );
+        })}
       </div>
     );
   };
@@ -209,14 +215,21 @@ const LapTimesTab = ({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-zinc-200">
+        <table className="w-full text-sm text-zinc-200 border-collapse" style={{ tableLayout: 'fixed' }}>
+          <colgroup>
+            <col style={{ width: '64px' }} />
+            <col style={{ width: 'auto' }} />
+            <col style={{ width: 'auto' }} />
+            <col />
+            <col />
+          </colgroup>
           <thead className="text-xs uppercase text-zinc-500">
             <tr className="border-b border-zinc-800">
               <th className="py-2 px-2 text-left">Lap</th>
               <th className="py-2 px-2 text-left">Lap Time</th>
-              <th className="py-2 px-2 text-left">Sector 1</th>
-              <th className="py-2 px-2 text-left">Sector 2</th>
-              <th className="py-2 px-2 text-left">Sector 3</th>
+              <th className="py-2 pl-2 pr-0 text-left">Sector 1</th>
+              <th className="py-2 px-0 text-left">Sector 2</th>
+              <th className="py-2 pl-0 pr-2 text-left">Sector 3</th>
             </tr>
           </thead>
           <tbody>
@@ -239,8 +252,16 @@ const LapTimesTab = ({
                   const fastest = sector === 1 ? sessionFastest.s1 : sector === 2 ? sessionFastest.s2 : sessionFastest.s3;
                   const personal = sector === 1 ? driverBest.s1 : sector === 2 ? driverBest.s2 : driverBest.s3;
                   const segments = sector === 1 ? lap.s1_segments : sector === 2 ? lap.s2_segments : lap.s3_segments;
+                  // First sector: normal left padding, zero right padding (touching Sector 2)
+                  // Middle sector: zero padding on both sides (touching both sectors)
+                  // Last sector: zero left padding (touching Sector 2), normal right padding
+                  const paddingClass = sector === 1 
+                    ? 'py-2 pl-2 pr-0' 
+                    : sector === 2 
+                      ? 'py-2 px-0' 
+                      : 'py-2 pl-0 pr-2';
                   return (
-                    <td key={sector} className="py-2 px-2">
+                    <td key={sector} className={paddingClass}>
                       <div className={`font-mono text-sm ${sectorColor(duration, fastest, personal)}`}>
                         {formatSectorTime(duration)}
                       </div>

@@ -396,7 +396,7 @@ def get_segment_meaning():
                     color_label,
                     meaning,
                     notes
-                FROM silver.segment_meaning
+                FROM gold.dim_segment_meaning
                 ORDER BY segment_value
             """)
             return cur.fetchall()
