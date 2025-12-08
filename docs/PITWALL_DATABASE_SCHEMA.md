@@ -353,12 +353,12 @@ Master table for F1 circuits.
 ### Event Tables
 
 #### 4. `silver.meetings`
-F1 Grand Prix events/weekends.
+F1 Grand Prix events/weekends. Supports both historical (ingested) and future (scheduled) meetings.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | `meeting_id` | TEXT | PRIMARY KEY, NOT NULL | Meeting identifier |
-| `openf1_meeting_key` | TEXT | NOT NULL | OpenF1 key |
+| `openf1_meeting_key` | TEXT | UNIQUE (where NOT NULL) | OpenF1 key (NULL for future meetings until data is ingested) |
 | `circuit_id` | TEXT | FK → circuits, NOT NULL | Circuit |
 | `meeting_name` | TEXT | NOT NULL | Meeting name |
 | `season` | INT | NOT NULL | Season year |
@@ -366,6 +366,8 @@ F1 Grand Prix events/weekends.
 | `date_start` | TIMESTAMPTZ | NOT NULL | Start date/time |
 | `date_end` | TIMESTAMPTZ | | End date/time |
 | `round_number` | INT | | Round number in season |
+
+**Note:** `openf1_meeting_key` is nullable to allow future/scheduled meetings to be pre-populated before OpenF1 has data. When meeting data is ingested and upserted, the key is filled in automatically via matching `meeting_id`.
 
 #### 5. `silver.sessions`
 Individual sessions (Practice, Qualifying, Sprint, Race).
@@ -1310,5 +1312,6 @@ Located in `pitwall_silver/`:
 ## Contact & Contributions
 
 For questions or contributions, please refer to the main README.md in the project root.
+
 
 

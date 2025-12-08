@@ -26,21 +26,44 @@ interface DatabaseStatus {
   };
 }
 
+interface DockerStatus {
+  running: boolean | null;
+  container: string;
+  status: string;
+  message?: string;
+}
+
 export const DatabaseAdmin = () => {
   const [status, setStatus] = useState<DatabaseStatus | null>(null);
+  const [dockerStatus, setDockerStatus] = useState<DockerStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [startingDocker, setStartingDocker] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  const fetchDockerStatus = async () => {
+    try {
+      const data = await api.database.dockerStatus();
+      setDockerStatus(data);
+    } catch {
+      // Docker status endpoint might fail if API can't reach docker
+      setDockerStatus({ running: null, container: 'pitwall_postgres', status: 'unknown' });
+    }
+  };
 
   const fetchStatus = async () => {
     try {
       const data = await api.database.status();
       setStatus(data);
       setError(null);
+      // Also fetch docker status
+      fetchDockerStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch status');
+      // Still try to get docker status even if main status fails
+      fetchDockerStatus();
     } finally {
       setLoading(false);
     }
@@ -56,6 +79,24 @@ export const DatabaseAdmin = () => {
     }, 3000);
     return () => clearInterval(interval);
   }, [status?.update.is_running]);
+
+  const handleStartDocker = async () => {
+    setStartingDocker(true);
+    setMessage(null);
+    setError(null);
+    try {
+      const result = await api.database.startDocker();
+      setMessage(result.message);
+      // Refresh status after starting
+      setTimeout(() => {
+        fetchStatus();
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start Docker container');
+    } finally {
+      setStartingDocker(false);
+    }
+  };
 
   const handleUpdate = async () => {
     setUpdating(true);
@@ -127,6 +168,77 @@ export const DatabaseAdmin = () => {
           </svg>
         </button>
       </div>
+
+      {/* Docker Status */}
+      {dockerStatus && (
+        <div className={`p-4 rounded-lg border ${
+          dockerStatus.running === true 
+            ? 'bg-green-500/10 border-green-500/30' 
+            : dockerStatus.running === false 
+              ? 'bg-orange-500/10 border-orange-500/30'
+              : 'bg-zinc-800/50 border-zinc-700'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* Docker whale icon */}
+              <svg className={`w-6 h-6 ${
+                dockerStatus.running === true 
+                  ? 'text-green-400' 
+                  : dockerStatus.running === false 
+                    ? 'text-orange-400'
+                    : 'text-zinc-500'
+              }`} viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.185-.186h-2.12a.186.186 0 00-.185.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z"/>
+              </svg>
+              <div>
+                <div className={`font-medium ${
+                  dockerStatus.running === true 
+                    ? 'text-green-400' 
+                    : dockerStatus.running === false 
+                      ? 'text-orange-400'
+                      : 'text-zinc-400'
+                }`}>
+                  {dockerStatus.running === true 
+                    ? 'Docker DB Running' 
+                    : dockerStatus.running === false 
+                      ? 'Docker DB Stopped'
+                      : 'Docker Status Unknown'}
+                </div>
+                <div className="text-xs text-zinc-500">
+                  {dockerStatus.status}
+                </div>
+              </div>
+            </div>
+            
+            {dockerStatus.running === false && (
+              <button
+                onClick={handleStartDocker}
+                disabled={startingDocker}
+                className={`py-2 px-4 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${
+                  startingDocker
+                    ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                    : 'bg-orange-600 hover:bg-orange-500 text-white'
+                }`}
+              >
+                {startingDocker ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Start Docker DB
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       {error && (
@@ -267,6 +379,8 @@ export const DatabaseAdmin = () => {
             Full update fetches new data from OpenF1 API → transforms to silver → refreshes gold views.
             <br />
             "Refresh Views" only refreshes the gold materialized views (faster).
+            <br />
+            <span className="text-zinc-500">Docker controls are for local development only.</span>
           </div>
         </>
       )}

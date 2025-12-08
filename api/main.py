@@ -64,8 +64,9 @@ app = FastAPI(
 ALLOWED_ORIGINS = [
     "http://localhost:5174",
     "http://localhost:3000",
-    "https://pitwall.one",  # Production frontend domain
-    os.getenv("FRONTEND_URL", ""),  # Set this in Railway to your Vercel URL
+    "https://pitwall.one",
+    "https://www.pitwall.one",
+    os.getenv("FRONTEND_URL", ""),  # Optional additional URL
 ]
 # Also allow any vercel.app subdomain
 app.add_middleware(

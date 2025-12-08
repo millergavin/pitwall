@@ -194,7 +194,7 @@ export const Playground = () => {
             />
           </div>
 
-          <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+          <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
             <div className="text-zinc-300 mb-2">Props:</div>
             <div>drivers: Driver[]</div>
             <div>season: number</div>
@@ -276,14 +276,14 @@ export const Playground = () => {
           </div>
         </div>
 
-        {/* Session Results Table - Position Change */}
+        {/* Session Results Table - Grid + Position Change */}
         <div className="bg-black rounded-corner p-6">
           <div className="mb-4">
             <h3 className="text-white f1-display-bold text-xl mb-2">
-              SessionResultsTable - Position Change
+              SessionResultsTable - Grid + Position Change
             </h3>
             <p className="text-zinc-400 f1-display-regular text-sm mb-4">
-              Shows position change indicators in a dedicated column for alignment.
+              Shows both starting grid position and position change side by side.
             </p>
           </div>
 
@@ -291,20 +291,22 @@ export const Playground = () => {
             <SessionResultsTable
               results={sessionResults}
               sessionType="race"
-              title="2025 Abu Dhabi Grand Prix - Race Results"
+              title="2025 Abu Dhabi Grand Prix - Race Results (Full Details)"
               onDriverClick={(driverId) => console.log('Navigate to driver:', driverId)}
+              showGridPosition
               showPositionChange
               showPoints
               showFastestLap
             />
           </div>
 
-          <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+          <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
             <div className="text-zinc-300 mb-2">Props:</div>
             <div>results: SessionResult[]</div>
             <div>sessionType: 'race' | 'qualifying' | 'practice' | 'sprint'</div>
-            <div>driverImageType?: 'team-logo' | 'driver-avatar' (auto-detected by session type)</div>
+            <div>driverImageType?: 'team-logo' | 'driver-avatar' (default: 'team-logo')</div>
             <div>onDriverClick?: (driverId: string) =&gt; void</div>
+            <div>showGridPosition?: boolean (default: false)</div>
             <div>showPositionChange?: boolean (default: true)</div>
             <div>showPoints?: boolean (default: true)</div>
             <div>showLaps?: boolean (default: false)</div>
@@ -383,7 +385,7 @@ export const Playground = () => {
                             <span className="text-white font-extrabold text-sm">
                               {driver.name.split(' ').pop()}
                             </span>
-                            <span className="text-zinc-500 f1-display-bold text-xs">
+                            <span className="text-zinc-500 font-mono font-bold text-xs">
                               {driver.acronym}
                               <span className="inline-block w-3" />
                               #{driver.position}
@@ -499,7 +501,7 @@ export const Playground = () => {
             </Table>
           </div>
 
-          <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+          <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
             <div className="text-zinc-300 mb-2">SparklineCell Props:</div>
             <div>data: number[] (array of values to plot)</div>
             <div>color: string (line color, e.g., '#FF0000')</div>
@@ -541,7 +543,7 @@ export const Playground = () => {
                   </TableRow>
                 </TableBody>
               </Table>
-              <div className="mt-2 text-zinc-500 text-xs f1-display-regular">
+              <div className="mt-2 text-zinc-500 text-xs font-mono">
                 nameFormat="last-name" showTeamName=false
               </div>
             </div>
@@ -567,7 +569,7 @@ export const Playground = () => {
                   </TableRow>
                 </TableBody>
               </Table>
-              <div className="mt-2 text-zinc-500 text-xs f1-display-regular">
+              <div className="mt-2 text-zinc-500 text-xs font-mono">
                 nameFormat="full-name" showTeamName=true
               </div>
             </div>
@@ -593,7 +595,7 @@ export const Playground = () => {
                   </TableRow>
                 </TableBody>
               </Table>
-              <div className="mt-2 text-zinc-500 text-xs f1-display-regular">
+              <div className="mt-2 text-zinc-500 text-xs font-mono">
                 nameFormat="last-name" showTeamName=true
               </div>
             </div>
@@ -619,7 +621,7 @@ export const Playground = () => {
                   </TableRow>
                 </TableBody>
               </Table>
-              <div className="mt-2 text-zinc-500 text-xs f1-display-regular">
+              <div className="mt-2 text-zinc-500 text-xs font-mono">
                 showPoints=true points=575
               </div>
             </div>
@@ -646,13 +648,13 @@ export const Playground = () => {
                   </TableRow>
                 </TableBody>
               </Table>
-              <div className="mt-2 text-zinc-500 text-xs f1-display-regular">
+              <div className="mt-2 text-zinc-500 text-xs font-mono">
                 showPoints=true points=285 deltaFromLeader=290
               </div>
             </div>
           </div>
 
-          <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+          <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
             <div className="text-zinc-300 mb-2">DriverNameCell Props:</div>
             <div>driverName: string</div>
             <div>nameAcronym: string</div>
@@ -741,7 +743,7 @@ export const Playground = () => {
                     <TableCell size="xs">
                       <div className="flex flex-col">
                         <span className="text-white">{driver.name}</span>
-                        <span className="text-zinc-500 text-xs f1-display-regular">
+                        <span className="text-zinc-500 text-xs font-mono">
                           {driver.acronym}
                           <span className="inline-block w-3" />
                           #{driver.position}
@@ -774,7 +776,7 @@ export const Playground = () => {
             {/* Table Props */}
             <div>
               <h4 className="text-white f1-display-bold text-base mb-2">Table</h4>
-              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
                 <div>variant: 'default' | 'compact' | 'spacious'</div>
                 <div>className?: string</div>
               </div>
@@ -783,7 +785,7 @@ export const Playground = () => {
             {/* TableHeader Props */}
             <div>
               <h4 className="text-white f1-display-bold text-base mb-2">TableHeader</h4>
-              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
                 <div>sticky?: boolean</div>
                 <div>onClick?: () =&gt; void</div>
                 <div>title?: string</div>
@@ -794,7 +796,7 @@ export const Playground = () => {
             {/* TableRow Props */}
             <div>
               <h4 className="text-white f1-display-bold text-base mb-2">TableRow</h4>
-              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
                 <div>selected?: boolean</div>
                 <div>faded?: boolean</div>
                 <div>hoverable?: boolean (default: true)</div>
@@ -808,7 +810,7 @@ export const Playground = () => {
             {/* TableCell Props */}
             <div>
               <h4 className="text-white f1-display-bold text-base mb-2">TableCell</h4>
-              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
                 <div>align?: 'left' | 'center' | 'right'</div>
                 <div>mono?: boolean</div>
                 <div>bold?: boolean</div>
@@ -821,7 +823,7 @@ export const Playground = () => {
             {/* TableHeaderCell Props */}
             <div>
               <h4 className="text-white f1-display-bold text-base mb-2">TableHeaderCell</h4>
-              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+              <div className="bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
                 <div>align?: 'left' | 'center' | 'right'</div>
                 <div>width?: string</div>
                 <div>className?: string</div>
@@ -836,7 +838,7 @@ export const Playground = () => {
             Usage Example
           </h3>
           <div className="bg-zinc-950 p-4 rounded overflow-x-auto">
-            <pre className="text-zinc-400 text-sm f1-display-regular">
+            <pre className="text-zinc-400 text-sm font-mono">
 {`import {
   Table,
   TableHeader,
@@ -930,7 +932,7 @@ export const Playground = () => {
                 </div>
               </div>
 
-              <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+              <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
                 <div className="text-zinc-300 mb-2">Props:</div>
                 <div>variant?: 'default' | 'ghost' (default: 'default')</div>
                 <div>size?: 'sm' | 'md' | 'lg' (default: 'md')</div>
@@ -1001,7 +1003,7 @@ export const Playground = () => {
                 </div>
               </div>
 
-              <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+              <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
                 <div className="text-zinc-300 mb-2">Ghost Variant Styling:</div>
                 <div>Active: bg-zinc-700 + text-white</div>
                 <div>Inactive: bg-transparent + text-zinc-600</div>
@@ -1033,7 +1035,7 @@ export const Playground = () => {
                 </div>
               </div>
 
-              <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 f1-display-regular">
+              <div className="mt-4 bg-zinc-950 p-4 rounded text-sm text-zinc-400 font-mono">
                 <div className="text-zinc-300 mb-2">Usage Example:</div>
                 <pre className="text-xs">{`const [activeTab, setActiveTab] = useState('overview');
 

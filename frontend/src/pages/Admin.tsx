@@ -39,7 +39,7 @@ export const Admin = () => {
               </div>
               <button
                 type="submit"
-                className="w-full px-4 py-16 bg-f1-red text-white rounded-corner hover:bg-[#981b1b] transition-colors f1-display-bold text-sm"
+                className="w-full px-4 py-4 bg-f1-red text-white rounded-corner hover:bg-[#981b1b] transition-colors f1-display-bold text-sm"
               >
                 ACCESS
               </button>

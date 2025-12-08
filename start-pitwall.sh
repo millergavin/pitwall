@@ -34,3 +34,5 @@ else
     echo "❌ Something went wrong. Check /tmp/pitwall-api.log and /tmp/cloudflared.log"
 fi
 
+
+

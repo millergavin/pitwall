@@ -237,6 +237,9 @@ def upsert_meetings(conn, meetings: List[Dict], circuit_id_map: Dict[str, str], 
         logger.warning("No meetings to upsert")
         return 0
     
+    # Note: COALESCE for openf1_meeting_key ensures that:
+    # - If a future meeting exists with NULL openf1_meeting_key, the incoming value fills it in
+    # - If an existing meeting already has openf1_meeting_key, we keep it (don't overwrite with NULL)
     upsert_sql = """
         INSERT INTO silver.meetings (
             meeting_id,
@@ -259,7 +262,7 @@ def upsert_meetings(conn, meetings: List[Dict], circuit_id_map: Dict[str, str], 
         )
         ON CONFLICT (meeting_id) 
         DO UPDATE SET
-            openf1_meeting_key = EXCLUDED.openf1_meeting_key,
+            openf1_meeting_key = COALESCE(EXCLUDED.openf1_meeting_key, silver.meetings.openf1_meeting_key),
             circuit_id = EXCLUDED.circuit_id,
             meeting_name = EXCLUDED.meeting_name,
             season = EXCLUDED.season,

@@ -41,9 +41,12 @@ CREATE TABLE IF NOT EXISTS silver.circuits (
 );
 
 -- 4. meetings
+-- Note: openf1_meeting_key is nullable to allow future/scheduled meetings to be
+-- inserted before OpenF1 has data for them. When data is later ingested, the
+-- upsert will match on meeting_id and fill in the openf1_meeting_key.
 CREATE TABLE IF NOT EXISTS silver.meetings (
     meeting_id TEXT NOT NULL PRIMARY KEY,
-    openf1_meeting_key TEXT NOT NULL,
+    openf1_meeting_key TEXT,  -- NULL for future meetings until data is ingested
     circuit_id TEXT NOT NULL REFERENCES silver.circuits(circuit_id),
     meeting_name TEXT NOT NULL,
     season INT NOT NULL,
@@ -52,6 +55,11 @@ CREATE TABLE IF NOT EXISTS silver.meetings (
     date_end TIMESTAMPTZ,
     round_number INT
 );
+
+-- Ensure openf1_meeting_key is unique when present (partial unique index)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_meetings_openf1_meeting_key_unique 
+ON silver.meetings(openf1_meeting_key) 
+WHERE openf1_meeting_key IS NOT NULL;
 
 -- Create ENUM types
 DO $$ BEGIN

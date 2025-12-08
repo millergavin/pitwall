@@ -238,20 +238,31 @@ export const TeamDetails = () => {
                   className="relative overflow-hidden rounded-corner cursor-pointer group transition-transform hover:scale-[1.02]"
                   style={{
                     backgroundColor: `#${team.color_hex}`,
-                    aspectRatio: '16 / 9',
+                    aspectRatio: '21 / 9',
                   }}
                 >
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+                  {/* Halftone texture overlay */}
+                  <div
+                    className="absolute inset-0 pointer-events-none opacity-50"
+                    style={{
+                      backgroundImage: 'url(/assets/textures/halftone.webp)',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                      mixBlendMode: 'multiply',
+                    }}
+                  />
+                  {/* Dark gradient for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent pointer-events-none" />
                   
                   {/* Driver info */}
-                  <div className="absolute inset-0 flex items-center justify-between p-4 lg:p-6">
+                  <div className="absolute inset-0 flex items-center justify-between p-4">
                     <div className="z-10">
-                      <div className="text-white/80 text-xs lg:text-sm f1-display-regular mb-1">
+                      <div className="text-white/80 text-xs f1-display-regular mb-0.5">
                         #{driver.driver_number}
                       </div>
-                      <h3 className="text-white f1-display-bold text-xl lg:text-2xl mb-2">{driver.full_name}</h3>
-                      <div className="text-white/90 f1-display-regular text-sm lg:text-base">
+                      <h3 className="text-white f1-display-bold text-lg lg:text-xl mb-1">{driver.full_name}</h3>
+                      <div className="text-white/90 f1-display-regular text-sm">
                         {driver.driver_points} pts
                       </div>
                     </div>

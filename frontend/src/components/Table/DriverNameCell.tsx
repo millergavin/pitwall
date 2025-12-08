@@ -83,14 +83,14 @@ export const DriverNameCell = ({
       {/* Driver Name and Secondary Info */}
       <div className="flex flex-col">
         {/* First line: Driver name */}
-        <span className="text-white font-extrabold text-base">
+        <span className="text-white font-extrabold text-sm">
           {displayName}
         </span>
         
         {/* Second line: Points OR Team name OR Acronym + Number */}
         {showPoints && points !== undefined ? (
           // Show points + delta
-          <span className="text-zinc-500 text-sm f1-display-regular">
+          <span className="text-zinc-500 text-xs f1-display-regular">
             {points} pts
             {deltaFromLeader !== undefined && deltaFromLeader > 0 && (
               <span className="ml-2">(-{deltaFromLeader})</span>
@@ -98,12 +98,12 @@ export const DriverNameCell = ({
           </span>
         ) : showTeamName ? (
           // Show team name
-          <span className="text-zinc-500 text-sm f1-display-regular">
+          <span className="text-zinc-500 text-xs">
             {teamName}
           </span>
         ) : (
           // Show acronym + number (default)
-          <span className="text-zinc-500 font-mono font-bold text-sm">
+          <span className="text-zinc-500 font-mono font-bold text-xs">
             {nameAcronym}
             {showNumber && driverNumber && (
               <>

@@ -116,7 +116,7 @@ export const SessionResultsTable = ({
       )}
 
       {/* Table */}
-      <Table>
+      <Table className="min-w-[110rem]">
         <TableHeader sticky>
           <tr>
             <TableHeaderCell width="4rem"></TableHeaderCell>

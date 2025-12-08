@@ -36,3 +36,5 @@ writeFileSync(
 console.log(`✓ Generated changelog with ${commits.length} commits`);
 
 
+
+
